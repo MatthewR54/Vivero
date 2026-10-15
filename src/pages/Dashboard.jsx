@@ -4,15 +4,14 @@ import { useAppData } from '../context/AppDataContext';
 import { formatCOP, formatCOPCompact } from '../utils/currency';
 import {
   Zap, Plus, ShoppingCart, WalletCards,
-  AlertTriangle, AlertOctagon, Sprout, Palette,
-  CircleCheck, Info, ArrowUpRight
+  AlertTriangle, AlertOctagon, Sprout, Palette
 } from 'lucide-react';
 import './Dashboard.css';
 
 const FILTER_OPTIONS = ['Hoy', 'Ayer', 'Últimos 7 días', 'Este Mes'];
 
 export default function Dashboard() {
-  const { products, transactions, alerts, statistics } = useAppData();
+  const { transactions, alerts, statistics } = useAppData();
   const [activeFilter, setActiveFilter] = useState('Hoy');
   const navigate = useNavigate();
 

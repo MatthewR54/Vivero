@@ -13,14 +13,14 @@ function loadFromStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
-  } catch (e) { /* ignore */ }
+  } catch { /* ignore */ }
   return null;
 }
 
 function saveToStorage(data) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch (e) { /* ignore */ }
+  } catch { /* ignore */ }
 }
 
 export function AppDataProvider({ children }) {

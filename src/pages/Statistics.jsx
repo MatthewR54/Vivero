@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAppData } from '../context/AppDataContext';
 import { formatCOP, formatCOPCompact } from '../utils/currency';
-import { Download, CircleCheck, TrendingUp, TrendingDown, DollarSign, Scale } from 'lucide-react';
+import { Download, CircleCheck, TrendingUp, Scale } from 'lucide-react';
 import './Statistics.css';
 
 const PERIOD_OPTIONS = ['Día', 'Semana', 'Este Mes', 'Año'];
