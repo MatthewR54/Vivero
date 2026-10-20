@@ -2,7 +2,7 @@
 
 Este documento traza el plan de ejecución táctico para que el equipo de desarrollo transforme el prototipo actual en una solución **100% lista para el cliente (Client-Ready)** en el plazo perentorio de **un mes**.
 
-El plan aborda sistemáticamente las simulaciones ("play-pretends") identificadas en el código fuente y en la matriz de seguimiento [`docs/seguimiento_requisitos.csv`](file:///C:/Users/Janus/Documents/GitHub/Vivero/docs/seguimiento_requisitos.csv).
+El plan aborda sistemáticamente las simulaciones ("play-pretends") identificadas en el código fuente y en la matriz de seguimiento [`docs/seguimiento_requisitos.csv`](docs/seguimiento_requisitos.csv).
 
 ---
 
@@ -18,8 +18,8 @@ pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.
 
 ### Principales Simulaciones a Eliminar:
 1. **Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-22, RNF-37).
-2. **Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/pages/Dashboard.jsx).
-3. **Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/pages/Statistics.jsx) muestra "$0.00 Diferencia (Cuadrado)" sin permitir ingresar el conteo físico de dinero real ni registrar justificaciones (RF-102 a RF-104).
+2. **Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).
+3. **Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) muestra "$0.00 Diferencia (Cuadrado)" sin permitir ingresar el conteo físico de dinero real ni registrar justificaciones (RF-102 a RF-104).
 4. **Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.
 5. **Módulos Faltantes:** Proveedores, Compras, Producción Propia de Plantas y Kardex de Inventario aún no tienen pantallas ni tablas en el backend.
 
@@ -55,17 +55,17 @@ gantt
 
 - [ ] **Infraestructura de Datos:**
   - Crear proyecto PostgreSQL en Supabase / Railway.
-  - Ejecutar migraciones del esquema relacional definido en [`TECHSTACK.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/TECHSTACK.md).
-  - Ejecutar script de seed inicial con los datos de [`src/data/seedData.js`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/data/seedData.js).
+  - Ejecutar migraciones del esquema relacional definido en [`TECHSTACK.md`](TECHSTACK.md).
+  - Ejecutar script de seed inicial con los datos de [`src/data/seedData.js`](src/data/seedData.js).
 - [ ] **Autenticación & Seguridad:**
   - Implementar login con correo y contraseña.
   - Generar sesión con JWT y control de roles (*Administrador*, *Vendedor*, *Operador*).
   - Añadir pantalla de inicio de sesión (`/login`) y protección de rutas en React Router.
 - [ ] **Migración de Módulos Existentes:**
   - Instalar `@tanstack/react-query` en el frontend.
-  - Conectar [`src/pages/Inventory.jsx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/pages/Inventory.jsx) al endpoint `GET /api/products` y `PATCH /api/products/:id`.
-  - Conectar [`src/pages/NewSale.jsx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/pages/NewSale.jsx) al endpoint transaccional `POST /api/sales`.
-  - Conectar [`src/pages/Sales.jsx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/pages/Sales.jsx) con paginación y búsqueda en servidor.
+  - Conectar [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx) al endpoint `GET /api/products` y `PATCH /api/products/:id`.
+  - Conectar [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx) al endpoint transaccional `POST /api/sales`.
+  - Conectar [`src/pages/Sales.jsx`](src/pages/Sales.jsx) con paginación y búsqueda en servidor.
 
 ---
 
@@ -138,4 +138,4 @@ gantt
 
 ---
 
-*Para dudas de implementación técnica o especificaciones de esquemas, referirse a [`TECHSTACK.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/TECHSTACK.md) y [`ARCHITECTURE.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/ARCHITECTURE.md).*
+*Para dudas de implementación técnica o especificaciones de esquemas, referirse a [`TECHSTACK.md`](TECHSTACK.md) y [`ARCHITECTURE.md`](ARCHITECTURE.md).*

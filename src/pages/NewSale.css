@@ -45,6 +45,17 @@
   font-size: 18px;
 }
 
+.ns-header-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #ffffff;
+  padding: 1px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
 .ns-title {
   font-size: 14px;
   font-weight: 600;

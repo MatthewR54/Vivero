@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
-import { Leaf, UserCircle, Menu, X } from 'lucide-react';
+import { UserCircle, Menu, X } from 'lucide-react';
+import colibriLogo from '../../assets/colibri_logo.png';
 import { useState } from 'react';
 import './Navbar.css';
 
@@ -17,7 +18,7 @@ export default function Navbar() {
     <nav className="navbar" role="navigation" aria-label="Navegación principal">
       <div className="navbar-inner">
         <div className="navbar-brand">
-          <Leaf size={22} />
+          <img src={colibriLogo} alt="Vivero Colibrí" className="navbar-logo" />
           <span className="navbar-brand-text">VIVERO COLIBRÍ</span>
         </div>
 

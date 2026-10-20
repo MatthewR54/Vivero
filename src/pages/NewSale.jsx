@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppData } from '../context/AppDataContext';
 import { formatCOP } from '../utils/currency';
 import { ArrowLeft, Search, Plus, Minus, Trash2, CircleCheck, Store } from 'lucide-react';
+import colibriLogo from '../assets/colibri_logo.png';
 import './NewSale.css';
 
 const CATEGORIES = [
@@ -141,6 +142,7 @@ export default function NewSale() {
             <ArrowLeft size={16} /> Volver a Ventas
           </button>
           <span className="ns-divider">|</span>
+          <img src={colibriLogo} alt="Vivero Colibrí" className="ns-header-logo" />
           <span className="ns-title">Registro de Nueva Venta • Confirmación</span>
         </div>
         <div className="ns-caja-badge">

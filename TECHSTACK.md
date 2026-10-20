@@ -333,10 +333,10 @@ erDiagram
 
 ## 🔄 5. Estrategia de Migración: De `seedData.js` a Base de Datos Real
 
-Actualmente, [`src/context/AppDataContext.jsx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/context/AppDataContext.jsx) orquesta las operaciones en memoria con persistencia en `localStorage`. Para dar el salto a producción sin romper la interfaz existente, se seguirá este procedimiento:
+Actualmente, [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx) orquesta las operaciones en memoria con persistencia en `localStorage`. Para dar el salto a producción sin romper la interfaz existente, se seguirá este procedimiento:
 
 ### Fase 1: Creación del Script de Siembra (Seed Script)
-Los datos de prueba existentes en [`src/data/seedData.js`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/data/seedData.js) (productos, clientes, transacciones históricas) se convertirán en un script de inicialización (`seed.sql` o `prisma/seed.ts`) para poblar la base de datos PostgreSQL en el primer despliegue.
+Los datos de prueba existentes en [`src/data/seedData.js`](src/data/seedData.js) (productos, clientes, transacciones históricas) se convertirán en un script de inicialización (`seed.sql` o `prisma/seed.ts`) para poblar la base de datos PostgreSQL en el primer despliegue.
 
 ### Fase 2: Capa de Servicios de API (`src/services/`)
 Se crearán módulos de consumo HTTP con `fetch` o `axios`:
@@ -381,4 +381,4 @@ Para estar listos para el cliente en 4 semanas con un equipo con recursos de tie
 2. **Backend:** **Node.js (TypeScript) + Express con Prisma ORM** (o API de Supabase con funciones SQL transaccionales).
 3. **Frontend:** Mantener la base actual en **React 19 + Vite**, integrando **TanStack Query** para la comunicación con el servidor.
 
-Consulta el plan cronológico detallado en [`ROADMAP.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/ROADMAP.md) y la arquitectura de flujos en [`ARCHITECTURE.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/ARCHITECTURE.md).
+Consulta el plan cronológico detallado en [`ROADMAP.md`](ROADMAP.md) y la arquitectura de flujos en [`ARCHITECTURE.md`](ARCHITECTURE.md).

@@ -1,6 +1,6 @@
 # 📐 Arquitectura del Sistema — Vivero Colibrí
 
-Este documento profundiza en la estructura técnica, distribución por capas y flujos de información del sistema **Vivero Colibrí**, complementando la especificación inicial descrita en [`docs/disenio_tecnico_inicial.docx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/docs/disenio_tecnico_inicial.docx).
+Este documento profundiza en la estructura técnica, distribución por capas y flujos de información del sistema **Vivero Colibrí**, complementando la especificación inicial descrita en [`docs/disenio_tecnico_inicial.docx`](docs/disenio_tecnico_inicial.docx).
 
 ---
 
@@ -91,7 +91,7 @@ El acceso a las funcionalidades y rutas se controla mediante roles (RNF-22 y RNF
 
 ## 🔄 3. Flujos de Información y Diagramas de Secuencia Transaccionales
 
-Conforme a la sección 2.10 de [`docs/disenio_tecnico_inicial.docx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/docs/disenio_tecnico_inicial.docx), los siguientes diagramas de secuencia especifican la interacción exacta entre capas para los procesos neurálgicos del negocio:
+Conforme a la sección 2.10 de [`docs/disenio_tecnico_inicial.docx`](docs/disenio_tecnico_inicial.docx), los siguientes diagramas de secuencia especifican la interacción exacta entre capas para los procesos neurálgicos del negocio:
 
 ### 3.1. Flujo 1: Registro de una Venta en Punto de Venta (POS)
 Garantiza que la venta, el descuento de stock, el movimiento en el kardex y la entrada de dinero en la cuenta de pago ocurran de forma atómica:

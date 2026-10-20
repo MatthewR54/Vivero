@@ -38,7 +38,7 @@ A diferencia de un software de inventario convencional, **Vivero Colibrí** requ
 
 ## 🧩 Funcionalidades y Módulos
 
-El sistema está diseñado en torno a 14 bloques funcionales especificados en [`docs/requisitos.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/docs/requisitos.md):
+El sistema está diseñado en torno a 14 bloques funcionales especificados en [`docs/requisitos.md`](docs/requisitos.md):
 
 | Módulo | Alcance Principal |
 | :--- | :--- |
@@ -61,10 +61,10 @@ Actualmente, el repositorio cuenta con un **prototipo funcional (MVP Frontend)**
 - ✅ **Catálogo y Registro de Productos:** Creación con generación automática de SKU según categoría y edición modal.
 - ✅ **Flujo de Venta Interactivo:** Selección visual de productos, carrito dinámico, validación de stock y emisión de tickets.
 - ✅ **Exportación de Ventas:** Descarga de historial en formato CSV.
-- ⚠️ **Simulación de Datos (Play-Pretend):** Actualmente los datos se gestionan en memoria y se sincronizan localmente en `localStorage` mediante [`src/context/AppDataContext.jsx`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/context/AppDataContext.jsx) y datos semilla en [`src/data/seedData.js`](file:///C:/Users/Janus/Documents/GitHub/Vivero/src/data/seedData.js).
+- ⚠️ **Simulación de Datos (Play-Pretend):** Actualmente los datos se gestionan en memoria y se sincronizan localmente en `localStorage` mediante [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx) y datos semilla en [`src/data/seedData.js`](src/data/seedData.js).
 - 🎯 **Meta Inmediata:** Transicionar el almacenamiento local a una **base de datos relacional PostgreSQL con backend API** para garantizar persistencia multi-dispositivo, transacciones ACID y entrega al cliente el próximo mes.
 
-Para consultar el seguimiento detallado de cada uno de los 148 requisitos funcionales y 38 no funcionales, revisa [`docs/seguimiento_requisitos.csv`](file:///C:/Users/Janus/Documents/GitHub/Vivero/docs/seguimiento_requisitos.csv).
+Para consultar el seguimiento detallado de cada uno de los 148 requisitos funcionales y 38 no funcionales, revisa [`docs/seguimiento_requisitos.csv`](docs/seguimiento_requisitos.csv).
 
 ---
 
@@ -158,10 +158,10 @@ El proyecto se encuentra en transición de un prototipo frontend hacia una soluc
 
 - **Frontend Actual:** React 19, Vite 8, React Router DOM 7, Lucide Icons, CSS Modular con variables nativas.
 - **Backend Propuesto:** Node.js (Express / Fastify) + TypeScript + Prisma ORM o servicio PostgreSQL backend (Supabase).
-- **Base de Datos Definitiva:** **PostgreSQL** relacional con soporte ACID (evaluación y descarte fundamentado de NoSQL en [`TECHSTACK.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/TECHSTACK.md)).
+- **Base de Datos Definitiva:** **PostgreSQL** relacional con soporte ACID (evaluación y descarte fundamentado de NoSQL en [`TECHSTACK.md`](TECHSTACK.md)).
 - **Despliegue Proyectado:** Frontend en Vercel/Netlify; Backend y Base de Datos en Supabase / Railway.
 
-Para revisar la justificación arquitectónica completa y el análisis comparativo de bases de datos, consulta [`TECHSTACK.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/TECHSTACK.md) y [`ARCHITECTURE.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/ARCHITECTURE.md).
+Para revisar la justificación arquitectónica completa y el análisis comparativo de bases de datos, consulta [`TECHSTACK.md`](TECHSTACK.md) y [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
 ---
 
@@ -169,12 +169,14 @@ Para revisar la justificación arquitectónica completa y el análisis comparati
 
 El repositorio cuenta con documentación exhaustiva para guiar el desarrollo:
 
-1. [**`TECHSTACK.md`**](file:///C:/Users/Janus/Documents/GitHub/Vivero/TECHSTACK.md): Análisis técnico, resolución de la duda NoSQL vs. Relacional, modelo entidad-relación y stack de producción.
-2. [**`ARCHITECTURE.md`**](file:///C:/Users/Janus/Documents/GitHub/Vivero/ARCHITECTURE.md): Diagramas de capas, flujos de datos transaccionales y contratos de API.
-3. [**`ROADMAP.md`**](file:///C:/Users/Janus/Documents/GitHub/Vivero/ROADMAP.md): Plan de acción detallado semana a semana para alcanzar el estado *client-ready* el próximo mes.
-4. [**`CONTRIBUTING.md`**](file:///C:/Users/Janus/Documents/GitHub/Vivero/CONTRIBUTING.md): Guía de estilo, convención de ramas y flujo de pull requests.
-5. [**`docs/requisitos.md`**](file:///C:/Users/Janus/Documents/GitHub/Vivero/docs/requisitos.md): Especificación formal de requisitos funcionales y no funcionales.
-6. [**`docs/seguimiento_requisitos.csv`**](file:///C:/Users/Janus/Documents/GitHub/Vivero/docs/seguimiento_requisitos.csv): Matriz de progreso requisito por requisito.
+1. [**`DEPLOYMENT_GUIDE.md`**](DEPLOYMENT_GUIDE.md): Guía de despliegue y servicios a **costo $0.00** (Cloudflare Pages, Supabase con keep-alive, PocketBase y TanStack Query).
+2. [**`PENDING_TASKS.md`**](PENDING_TASKS.md): Checklist de tareas pendientes que son **desarrollables de inmediato** sin servicios externos.
+3. [**`TECHSTACK.md`**](TECHSTACK.md): Análisis técnico, resolución de la duda NoSQL vs. Relacional, modelo entidad-relación y stack de producción.
+4. [**`ARCHITECTURE.md`**](ARCHITECTURE.md): Diagramas de capas, flujos de datos transaccionales y contratos de API.
+5. [**`ROADMAP.md`**](ROADMAP.md): Plan de acción detallado semana a semana para alcanzar el estado *client-ready* el próximo mes.
+6. [**`CONTRIBUTING.md`**](CONTRIBUTING.md): Guía de estilo, convención de ramas y flujo de pull requests.
+7. [**`docs/requisitos.md`**](docs/requisitos.md): Especificación formal de requisitos funcionales y no funcionales.
+8. [**`docs/seguimiento_requisitos.csv`**](docs/seguimiento_requisitos.csv): Matriz de progreso requisito por requisito.
 
 ---
 
@@ -183,7 +185,7 @@ El repositorio cuenta con documentación exhaustiva para guiar el desarrollo:
 1. Crea una rama descriptiva a partir de `main` (ejemplo: `feature/modulo-compras` o `fix/validacion-pago`).
 2. Realiza cambios modulares preservando comentarios y estructura.
 3. Ejecuta `npm run lint` y `npm run build` para asegurar que el proyecto compile sin advertencias críticas.
-4. Envía un Pull Request describiendo los requisitos abordados. Consulta [`CONTRIBUTING.md`](file:///C:/Users/Janus/Documents/GitHub/Vivero/CONTRIBUTING.md) para más detalles.
+4. Envía un Pull Request describiendo los requisitos abordados. Consulta [`CONTRIBUTING.md`](CONTRIBUTING.md) para más detalles.
 
 ---
 

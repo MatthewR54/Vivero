@@ -4,6 +4,7 @@ import { useAppData } from '../context/AppDataContext';
 import { formatCOP } from '../utils/currency';
 import { exportToCSV } from '../utils/exportCSV';
 import { Plus, Search, Download, X, FileText } from 'lucide-react';
+import colibriLogo from '../assets/colibri_logo.png';
 import './Sales.css';
 
 const PAYMENT_METHODS = ['Todos los métodos', 'Efectivo', 'Nequi', 'Bancolombia'];
@@ -173,9 +174,12 @@ export default function Sales() {
         <div className="modal-overlay" onClick={() => setTicketModal(null)}>
           <div className="modal-content ticket-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <div className="modal-header-title">
-                <h3>Ticket de Venta {ticketModal.id}</h3>
-                <p>Comprobante de transacción</p>
+              <div className="modal-header-title ticket-header-brand">
+                <img src={colibriLogo} alt="Vivero Colibrí" className="ticket-logo" />
+                <div>
+                  <h3>Ticket de Venta {ticketModal.id}</h3>
+                  <p>Vivero Colibrí • Comprobante de transacción</p>
+                </div>
               </div>
               <button className="modal-close" onClick={() => setTicketModal(null)} aria-label="Cerrar">
                 <X size={20} />

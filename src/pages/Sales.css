@@ -122,6 +122,23 @@
   color: var(--green-primary);
 }
 
+.ticket-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ticket-logo {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  padding: 2px;
+  background: #ffffff;
+  flex-shrink: 0;
+}
+
 @media (max-width: 767px) {
   .sales-search {
     min-width: 100%;
