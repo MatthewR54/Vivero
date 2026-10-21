@@ -23,8 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment variables
+.env
+
 # Archivos internos
-supabase/*
 *.docx
 *.pdf
 *.csv
+
+# Configuración de Base de Datos / Supabase (si se usa BaaS)
+supabase/*
