@@ -30,6 +30,3 @@ dist-ssr
 *.docx
 *.pdf
 *.csv
-
-# Configuración de Base de Datos / Supabase (si se usa BaaS)
-supabase/*
