@@ -98,6 +98,9 @@ Vivero/
 │   ├── utils/                          # Utilidades matemáticas, moneda COP y exportación
 │   ├── App.jsx                         # Enrutador principal (React Router v7)
 │   └── main.jsx                        # Punto de entrada de la aplicación
+├── supabase/                           # Scripts SQL para PostgreSQL y Supabase
+│   ├── schema.sql                      # Esquema DDL completo (tablas, RLS, procedimientos)
+│   └── seed.sql                        # Datos semilla iniciales del catálogo y cuentas
 ├── ARCHITECTURE.md                     # Arquitectura de software y flujos de datos
 ├── CONTRIBUTING.md                     # Guía de contribución y ramas de Git
 ├── ROADMAP.md                          # Plan de trabajo a 4 semanas para entrega
@@ -177,6 +180,7 @@ El repositorio cuenta con documentación exhaustiva para guiar el desarrollo:
 6. [**`CONTRIBUTING.md`**](CONTRIBUTING.md): Guía de estilo, convención de ramas y flujo de pull requests.
 7. [**`docs/requisitos.md`**](docs/requisitos.md): Especificación formal de requisitos funcionales y no funcionales.
 8. [**`docs/seguimiento_requisitos.csv`**](docs/seguimiento_requisitos.csv): Matriz de progreso requisito por requisito.
+9. [**`supabase/schema.sql`**](supabase/schema.sql) & [**`supabase/seed.sql`**](supabase/seed.sql): Scripts SQL ejecutables para el aprovisionamiento de PostgreSQL, políticas RLS, función transaccional ACID y datos de prueba.
 
 ---
 

@@ -126,6 +126,9 @@ Si el tiempo del equipo es extremadamente limitado durante las próximas dos sem
 
 ## 🗄️ 4. Modelo Entidad-Relación y Esquema de Base de Datos
 
+> [!TIP]
+> **Script DDL y Datos Semilla Disponibles:** El script SQL ejecutable completo para PostgreSQL y Supabase se encuentra listo en [`supabase/schema.sql`](supabase/schema.sql), acompañado por los datos iniciales en [`supabase/seed.sql`](supabase/seed.sql). Puedes copiar y pegar directamente su contenido en el **SQL Editor** de Supabase para aprovisionar la base de datos en 1 minuto.
+
 El siguiente diagrama modela la totalidad de los requisitos funcionales del sistema (Productos, Proveedores, Compras, Inventario/Kardex, Producción Biológica, Merchandising, Ventas, Tesorería y Conciliación):
 
 ```mermaid
@@ -336,7 +339,7 @@ erDiagram
 Actualmente, [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx) orquesta las operaciones en memoria con persistencia en `localStorage`. Para dar el salto a producción sin romper la interfaz existente, se seguirá este procedimiento:
 
 ### Fase 1: Creación del Script de Siembra (Seed Script)
-Los datos de prueba existentes en [`src/data/seedData.js`](src/data/seedData.js) (productos, clientes, transacciones históricas) se convertirán en un script de inicialización (`seed.sql` o `prisma/seed.ts`) para poblar la base de datos PostgreSQL en el primer despliegue.
+Los datos de prueba existentes en [`src/data/seedData.js`](src/data/seedData.js) (productos, clientes, transacciones históricas) han sido estructurados en el archivo ejecutable [`supabase/seed.sql`](supabase/seed.sql) para poblar la base de datos PostgreSQL en el primer despliegue.
 
 ### Fase 2: Capa de Servicios de API (`src/services/`)
 Se crearán módulos de consumo HTTP con `fetch` o `axios`:

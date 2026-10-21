@@ -24,6 +24,7 @@ dist-ssr
 *.sw?
 
 # Archivos internos
+supabase/*
 *.docx
 *.pdf
 *.csv

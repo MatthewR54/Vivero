@@ -125,12 +125,14 @@ Supabase provee una base de datos relacional PostgreSQL completa con autenticaci
 5. Selecciona la región más cercana al cliente (por ejemplo, `South America (São Paulo)` o `East US`).
 6. Espera aproximadamente 1-2 minutos a que el clúster PostgreSQL se aprovisione.
 
-#### Paso 2: Ejecutar el Esquema Relacional
+#### Paso 2: Ejecutar el Esquema Relacional (DDL) y Datos Semilla
 1. En el panel izquierdo de Supabase, entra a **SQL Editor**.
 2. Haz clic en **New query**.
-3. Copia y ejecuta el script DDL con las tablas del modelo entidad-relación (detallado en [`TECHSTACK.md`](TECHSTACK.md)):
-   - `users`, `categories`, `suppliers`, `products`, `inventory_movements`, `purchases`, `purchase_items`, `sales`, `sale_items`, `production_batches`, `custom_merch_orders`, `accounts`, `reconciliations`.
-4. Verifica en el menú **Table Editor** que las tablas se hayan creado con sus respectivas llaves foráneas e índices.
+3. Abre el archivo [`supabase/schema.sql`](supabase/schema.sql) del repositorio, copia todo su contenido y pégalo en el editor SQL de Supabase. Haz clic en **Run**.
+   - Esto creará automáticamente las 14 tablas relacionales, secuencias, llaves foráneas, índices, la función transaccional ACID `process_sale_transaction` y las políticas de seguridad Row-Level Security (RLS).
+4. Haz clic en **New query** nuevamente, abre el archivo [`supabase/seed.sql`](supabase/seed.sql), copia su contenido y haz clic en **Run**.
+   - Esto cargará los datos iniciales de categorías, proveedores, cuentas de dinero, productos, inventario inicial y ventas de prueba.
+5. Verifica en el menú **Table Editor** que las tablas aparezcan creadas y pobladas con sus respectivos registros.
 
 #### Paso 3: Obtener Credenciales de Conexión
 1. Dirígete a **Project Settings** (icono de engranaje) → **API**.
