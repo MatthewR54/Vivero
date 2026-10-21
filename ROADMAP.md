@@ -53,16 +53,17 @@ gantt
 ### 🚀 Sprint 1 (Semana 1): Capa de Datos Real y Backend Base
 > **Objetivo:** Erradicar `localStorage` y conectar el frontend existente a una base de datos relacional con autenticación.
 
-- [ ] **Infraestructura de Datos:**
-  - Crear proyecto PostgreSQL en Supabase / Railway.
-  - Ejecutar migraciones del esquema relacional definido en [`TECHSTACK.md`](TECHSTACK.md).
-  - Ejecutar script de seed inicial con los datos de [`src/data/seedData.js`](src/data/seedData.js).
+- [x] **Infraestructura de Datos:**
+  - ~~Crear proyecto PostgreSQL en Supabase / Railway.~~ ✅ Proyecto Supabase creado y configurado.
+  - ~~Ejecutar migraciones del esquema relacional definido en [`TECHSTACK.md`](TECHSTACK.md).~~ ✅ Esquema ejecutado vía `supabase/schema.sql`.
+  - ~~Ejecutar script de seed inicial con los datos de [`src/data/seedData.js`](src/data/seedData.js).~~ ✅ Datos semilla cargados vía `supabase/seed.sql`.
 - [ ] **Autenticación & Seguridad:**
   - Implementar login con correo y contraseña.
   - Generar sesión con JWT y control de roles (*Administrador*, *Vendedor*, *Operador*).
   - Añadir pantalla de inicio de sesión (`/login`) y protección de rutas en React Router.
-- [ ] **Migración de Módulos Existentes:**
-  - Instalar `@tanstack/react-query` en el frontend.
+- [x] **Migración de Módulos Existentes:**
+  - ~~Instalar `@tanstack/react-query` en el frontend.~~ ✅ Instalado `@tanstack/react-query` v5 y `@supabase/supabase-js`. `QueryClientProvider` configurado en `src/main.jsx` con caché de 5 min, gc de 30 min y retry de 1 intento.
+  - ~~Crear cliente Supabase y capa de servicios.~~ ✅ Creados `src/services/supabaseClient.js`, `src/services/productsService.js` y `src/hooks/useProducts.js`.
   - Conectar [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx) al endpoint `GET /api/products` y `PATCH /api/products/:id`.
   - Conectar [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx) al endpoint transaccional `POST /api/sales`.
   - Conectar [`src/pages/Sales.jsx`](src/pages/Sales.jsx) con paginación y búsqueda en servidor.
@@ -123,7 +124,7 @@ gantt
 - [ ] **Validación No Funcional & Entrega:**
   - Pruebas de diseño responsive en teléfonos inteligentes y tabletas (RNF-07 a RNF-10).
   - Verificación de copias de seguridad automáticas (RNF-25).
-  - Despliegue final en producción (Frontend en Vercel, Backend en Railway/Supabase).
+  - Despliegue final en producción (Frontend en Cloudflare Pages, Backend en Supabase).
   - Capacitación del cliente y entrega formal de credenciales.
 
 ---
