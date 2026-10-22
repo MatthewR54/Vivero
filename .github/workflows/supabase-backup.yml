@@ -30,10 +30,23 @@ jobs:
           SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
           BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
         run: |
-          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
-            echo "::error::Faltan los secrets SUPABASE_DB_URL y/o BACKUP_PASSPHRASE (ver docs/respaldos_base_datos.md)"
-            exit 1
-          fi
+          FALTAN=0
+          for NOMBRE in SUPABASE_DB_URL BACKUP_PASSPHRASE; do
+            if [ -z "${!NOMBRE}" ]; then
+              echo "::error::Falta el secret $NOMBRE (ver docs/respaldos_base_datos.md)"
+              FALTAN=1
+            else
+              echo "$NOMBRE: configurado"
+            fi
+          done
+          case "$SUPABASE_DB_URL" in
+            ''|postgresql://*|postgres://*) ;;
+            *) echo "::error::SUPABASE_DB_URL debe empezar por postgresql://"; FALTAN=1 ;;
+          esac
+          case "$SUPABASE_DB_URL" in
+            *YOUR-PASSWORD*) echo "::error::SUPABASE_DB_URL aún tiene [YOUR-PASSWORD]; reemplázalo por la contraseña de la base"; FALTAN=1 ;;
+          esac
+          exit $FALTAN
 
       - name: Generar respaldo (pg_dump)
         env:
