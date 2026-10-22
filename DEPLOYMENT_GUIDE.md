@@ -186,6 +186,10 @@ jobs:
 2. Añade `SUPABASE_URL` y `SUPABASE_ANON_KEY`.
 3. ¡Listo! La base de datos permanecerá activa indefinidamente a costo $0.
 
+### Respaldo Diario Automático (RNF-25)
+
+El plan gratuito de Supabase no incluye copias de seguridad descargables. El workflow `.github/workflows/supabase-backup.yml` genera cada día un `pg_dump` cifrado y lo guarda 30 días en GitHub Actions. Configuración y restauración en [`docs/respaldos_base_datos.md`](docs/respaldos_base_datos.md).
+
 ---
 
 ### Alternativa 100% Gratuita & Offline-Friendly: PocketBase

@@ -1,0 +1,79 @@
+name: Supabase Backup
+
+on:
+  schedule:
+    # Se ejecuta todos los días a las 08:17 UTC (3:17 AM hora Colombia)
+    - cron: '17 8 * * *'
+  workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub
+
+# Dos respaldos no deben correr al mismo tiempo
+concurrency:
+  group: supabase-backup
+  cancel-in-progress: false
+
+env:
+  # Versión mayor de pg_dump: debe ser igual o mayor a la versión de Postgres
+  # del proyecto en Supabase (Project Settings → Infrastructure).
+  PG_MAJOR: '17'
+  # Días que GitHub guarda cada respaldo (máximo 90 en repositorios públicos)
+  RETENTION_DAYS: 30
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Verificar secrets
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Faltan los secrets SUPABASE_DB_URL y/o BACKUP_PASSPHRASE (ver docs/respaldos_base_datos.md)"
+            exit 1
+          fi
+
+      - name: Generar respaldo (pg_dump)
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          set -euo pipefail
+          STAMP=$(TZ=America/Bogota date +%Y-%m-%d_%H%M)
+          echo "BACKUP_NAME=vivero_respaldo_${STAMP}" >> "$GITHUB_ENV"
+
+          # Solo el esquema public (tablas, datos, funciones, políticas RLS y permisos).
+          # Los esquemas internos de Supabase (auth, storage, etc.) los administra Supabase.
+          docker run --rm -e SUPABASE_DB_URL postgres:${PG_MAJOR}-alpine \
+            sh -c 'pg_dump --dbname="$SUPABASE_DB_URL" --schema=public --no-owner --quote-all-identifiers' \
+            > respaldo.sql
+
+          # Un dump incompleto no termina con esta línea
+          if ! tail -n 5 respaldo.sql | grep -q 'PostgreSQL database dump complete'; then
+            echo "::error::El respaldo quedó incompleto"
+            exit 1
+          fi
+          echo "Tablas respaldadas: $(grep -c '^COPY ' respaldo.sql)"
+          echo "Tamaño: $(du -h respaldo.sql | cut -f1)"
+
+      - name: Comprimir y cifrar
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          # El repositorio es público: el respaldo contiene datos de clientes,
+          # así que se cifra antes de subirlo como artifact.
+          gzip -9 respaldo.sql
+          gpg --batch --yes --pinentry-mode loopback \
+            --passphrase-file <(printf '%s' "$BACKUP_PASSPHRASE") \
+            --symmetric --cipher-algo AES256 \
+            --output "${BACKUP_NAME}.sql.gz.gpg" respaldo.sql.gz
+          rm respaldo.sql.gz
+
+      - name: Guardar respaldo
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BACKUP_NAME }}
+          path: ${{ env.BACKUP_NAME }}.sql.gz.gpg
+          retention-days: ${{ env.RETENTION_DAYS }}
+          if-no-files-found: error
+          compression-level: 0
