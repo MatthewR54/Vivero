@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppData } from '../context/AppDataContext';
 import { formatCOP } from '../utils/currency';
 import { exportToCSV } from '../utils/exportCSV';
+import { getTodayString } from '../utils/calculations';
 import { Plus, Search, Download, X, FileText } from 'lucide-react';
 import colibriLogo from '../assets/colibri_logo.png';
 import './Sales.css';
@@ -136,7 +137,9 @@ export default function Sales() {
                 {filtered.map(sale => (
                   <tr key={sale.id}>
                     <td><span className="sale-id">{sale.id}</span></td>
-                    <td className="td-muted">Hoy, {sale.time}</td>
+                    <td className="td-muted">
+                      {sale.date === getTodayString() ? 'Hoy' : sale.date}, {sale.time}
+                    </td>
                     <td>
                       {sale.customer.name}
                       {sale.customer.document && (

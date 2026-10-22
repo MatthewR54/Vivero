@@ -132,7 +132,9 @@ Supabase provee una base de datos relacional PostgreSQL completa con autenticaci
    - Esto creará automáticamente las 14 tablas relacionales, secuencias, llaves foráneas, índices, la función transaccional ACID `process_sale_transaction` y las políticas de seguridad Row-Level Security (RLS).
 4. Haz clic en **New query** nuevamente, abre el archivo [`supabase/seed.sql`](supabase/seed.sql), copia su contenido y haz clic en **Run**.
    - Esto cargará los datos iniciales de categorías, proveedores, cuentas de dinero, productos, inventario inicial y ventas de prueba.
-5. Verifica en el menú **Table Editor** que las tablas aparezcan creadas y pobladas con sus respectivos registros.
+5. Haz clic en **New query** otra vez, abre [`supabase/migration_01_conexion_frontend.sql`](supabase/migration_01_conexion_frontend.sql), copia su contenido y haz clic en **Run**.
+   - Esto ajusta la función de ventas para que la base de datos genere el número `VTA-XXXX`, recalcule los totales, guarde el costo unitario y use la hora de Colombia, y registra en el Kardex el stock inicial de cada producto nuevo. Ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md).
+6. Verifica en el menú **Table Editor** que las tablas aparezcan creadas y pobladas con sus respectivos registros.
 
 #### Paso 3: Obtener Credenciales de Conexión
 1. Dirígete a **Project Settings** (icono de engranaje) → **API**.

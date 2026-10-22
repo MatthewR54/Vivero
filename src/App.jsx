@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AppDataProvider } from './context/AppDataContext';
 import Navbar from './components/layout/Navbar';
 import ToastContainer from './components/ui/ToastContainer';
+import DataStatusBanner from './components/ui/DataStatusBanner';
 import Dashboard from './pages/Dashboard';
 import Sales from './pages/Sales';
 import NewSale from './pages/NewSale';
@@ -17,6 +18,7 @@ function AppLayout() {
   return (
     <>
       {!hideNavbar && <Navbar />}
+      <DataStatusBanner />
       <ToastContainer />
       <Routes>
         <Route path="/" element={<Dashboard />} />
