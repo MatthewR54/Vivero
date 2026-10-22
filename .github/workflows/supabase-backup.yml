@@ -5,6 +5,8 @@ on:
     # Se ejecuta todos los días a las 08:17 UTC (3:17 AM hora Colombia)
     - cron: '17 8 * * *'
   workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub
+  push: # TEMPORAL: prueba de secrets antes de fusionar a main
+    branches: [feature/respaldo-diario]
 
 # Dos respaldos no deben correr al mismo tiempo
 concurrency:
