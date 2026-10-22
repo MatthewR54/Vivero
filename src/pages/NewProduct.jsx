@@ -29,6 +29,7 @@ export default function NewProduct() {
   });
 
   const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
 
   const autoSku = useMemo(() => {
     const num = nextProductId[form.category] || 1;
@@ -45,7 +46,8 @@ export default function NewProduct() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (saving) return;
     const newErrors = {};
     if (!form.name.trim()) newErrors.name = 'Nombre requerido';
     if (!form.stock && form.stock !== 0) newErrors.stock = 'Stock requerido';
@@ -58,22 +60,28 @@ export default function NewProduct() {
       return;
     }
 
-    addProduct({
-      sku: autoSku,
-      name: form.name,
-      category: form.category,
-      origin: selectedOrigin?.origin || '',
-      stock: parseInt(form.stock),
-      minStock: parseInt(form.minStock),
-      cost: parseInt(form.cost),
-      price: parseInt(form.price),
-      unit: form.unit,
-      location: form.location,
-      description: form.description
-    });
+    setSaving(true);
+    try {
+      await addProduct({
+        sku: autoSku,
+        name: form.name,
+        category: form.category,
+        origin: selectedOrigin?.origin || '',
+        stock: parseInt(form.stock),
+        minStock: parseInt(form.minStock),
+        cost: parseInt(form.cost),
+        price: parseInt(form.price),
+        unit: form.unit,
+        location: form.location,
+        description: form.description
+      });
 
-    showToast('Producto agregado al catálogo', 'success');
-    navigate('/inventario');
+      showToast('Producto agregado al catálogo', 'success');
+      navigate('/inventario');
+    } catch (err) {
+      showToast(`No se pudo guardar el producto: ${err.message}`, 'error');
+      setSaving(false);
+    }
   };
 
   return (
@@ -91,8 +99,8 @@ export default function NewProduct() {
           <button className="btn btn-ghost" onClick={() => navigate('/inventario')}>
             <X size={16} /> Descartar
           </button>
-          <button className="btn btn-primary" onClick={handleSave}>
-            <Save size={16} /> Guardar y Publicar en Catálogo
+          <button className="btn btn-primary" onClick={handleSave} disabled={saving}>
+            <Save size={16} /> {saving ? 'Guardando...' : 'Guardar y Publicar en Catálogo'}
           </button>
         </div>
       </div>

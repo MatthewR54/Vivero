@@ -13,6 +13,13 @@ const CATEGORY_FILTERS = [
   { key: 'alert', label: '⚠ Con Alerta Stock' }
 ];
 
+const ORIGIN_OPTIONS = [
+  'Producción Vivero',
+  'Merchandising Social',
+  'Adquirido (Distribuidora)',
+  'Adquirido'
+];
+
 export default function Inventory() {
   const { products, updateProduct, showToast } = useAppData();
   const navigate = useNavigate();
@@ -21,6 +28,7 @@ export default function Inventory() {
   const [catFilter, setCatFilter] = useState('all');
   const [editModal, setEditModal] = useState(null);
   const [editForm, setEditForm] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const alertCount = products.filter(p => {
     const status = getStockStatus(p.stock, p.minStock);
@@ -56,18 +64,25 @@ export default function Inventory() {
     setEditModal(product);
   };
 
-  const handleSaveEdit = () => {
-    if (!editModal) return;
-    updateProduct(editModal.id, {
-      name: editForm.name,
-      origin: editForm.origin,
-      minStock: parseInt(editForm.minStock) || 0,
-      cost: parseInt(editForm.cost) || 0,
-      price: parseInt(editForm.price) || 0,
-      active: editForm.active
-    });
-    showToast('Producto actualizado correctamente', 'success');
-    setEditModal(null);
+  const handleSaveEdit = async () => {
+    if (!editModal || savingEdit) return;
+    setSavingEdit(true);
+    try {
+      await updateProduct(editModal.id, {
+        name: editForm.name,
+        origin: editForm.origin,
+        minStock: parseInt(editForm.minStock) || 0,
+        cost: parseInt(editForm.cost) || 0,
+        price: parseInt(editForm.price) || 0,
+        active: editForm.active
+      });
+      showToast('Producto actualizado correctamente', 'success');
+      setEditModal(null);
+    } catch (err) {
+      showToast(`No se pudo actualizar el producto: ${err.message}`, 'error');
+    } finally {
+      setSavingEdit(false);
+    }
   };
 
   const editMargin = editForm.price && editForm.cost
@@ -217,12 +232,16 @@ export default function Inventory() {
                 </div>
                 <div className="input-group">
                   <label>Tipo / Línea</label>
-                  <input
-                    type="text"
+                  {/* Valores permitidos por la restricción CHECK de products.origin en la BD */}
+                  <select
                     className="input-field"
                     value={editForm.origin}
                     onChange={e => setEditForm({ ...editForm, origin: e.target.value })}
-                  />
+                  >
+                    {[...new Set([...ORIGIN_OPTIONS, editForm.origin].filter(Boolean))].map(o => (
+                      <option key={o} value={o}>{o}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -297,8 +316,8 @@ export default function Inventory() {
             </div>
             <div className="modal-footer">
               <button className="btn btn-outline" onClick={() => setEditModal(null)}>Cancelar</button>
-              <button className="btn btn-primary" onClick={handleSaveEdit}>
-                <Save size={14} /> Guardar Cambios
+              <button className="btn btn-primary" onClick={handleSaveEdit} disabled={savingEdit}>
+                <Save size={14} /> {savingEdit ? 'Guardando...' : 'Guardar Cambios'}
               </button>
             </div>
           </div>

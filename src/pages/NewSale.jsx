@@ -31,6 +31,7 @@ export default function NewSale() {
   const [paymentMethod, setPaymentMethod] = useState('Efectivo');
   const [received, setReceived] = useState('');
   const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -100,7 +101,8 @@ export default function NewSale() {
     return product.stock - (inCart ? inCart.quantity : 0);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
+    if (submitting) return;
     const newErrors = {};
     if (cart.length === 0) newErrors.cart = 'Agrega al menos un producto';
     if (!customer.name.trim()) newErrors.name = 'Nombre requerido';
@@ -113,24 +115,32 @@ export default function NewSale() {
       return;
     }
 
-    addSale({
-      customer: {
-        document: customer.document,
-        name: customer.name
-      },
-      items: cart.map(c => ({
-        productId: c.productId,
-        name: c.name,
-        quantity: c.quantity,
-        unitPrice: c.unitPrice,
-        subtotal: c.subtotal
-      })),
-      paymentMethod,
-      total: cartTotal
-    });
+    setSubmitting(true);
+    try {
+      const { saleId } = await addSale({
+        customer: {
+          document: customer.document,
+          name: customer.name,
+          phone: customer.phone,
+          email: customer.email
+        },
+        items: cart.map(c => ({
+          productId: c.productId,
+          name: c.name,
+          quantity: c.quantity,
+          unitPrice: c.unitPrice,
+          subtotal: c.subtotal
+        })),
+        paymentMethod,
+        total: cartTotal
+      });
 
-    showToast('Venta registrada correctamente', 'success');
-    navigate('/ventas');
+      showToast(`Venta ${saleId ?? ''} registrada correctamente`, 'success');
+      navigate('/ventas');
+    } catch (err) {
+      showToast(`No se pudo registrar la venta: ${err.message}`, 'error');
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -365,8 +375,12 @@ export default function NewSale() {
             </div>
 
             {/* Confirm Button */}
-            <button className="btn btn-primary btn-lg btn-block ns-confirm-btn" onClick={handleConfirm}>
-              <CircleCheck size={18} /> Confirmar y Emitir Venta
+            <button
+              className="btn btn-primary btn-lg btn-block ns-confirm-btn"
+              onClick={handleConfirm}
+              disabled={submitting}
+            >
+              <CircleCheck size={18} /> {submitting ? 'Registrando venta...' : 'Confirmar y Emitir Venta'}
             </button>
           </div>
         </div>

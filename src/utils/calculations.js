@@ -52,7 +52,11 @@ export function generateSKU(category, nextNum) {
  * Obtiene la fecha actual formateada
  */
 export function getTodayString() {
-  return new Date().toISOString().split('T')[0];
+  // Fecha local (YYYY-MM-DD). toISOString() usa UTC y después de las 7 p. m.
+  // en Colombia devolvía la fecha de mañana.
+  const d = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
 /**
