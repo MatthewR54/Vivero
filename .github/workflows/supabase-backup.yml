@@ -46,6 +46,12 @@ jobs:
           case "$SUPABASE_DB_URL" in
             *YOUR-PASSWORD*) echo "::error::SUPABASE_DB_URL aún tiene [YOUR-PASSWORD]; reemplázalo por la contraseña de la base"; FALTAN=1 ;;
           esac
+          # Una contraseña con @ : / ? # [ ] rompe la URL; debe tener solo letras y números
+          CREDENCIALES="${SUPABASE_DB_URL#*://}"; CREDENCIALES="${CREDENCIALES%@*}"
+          CLAVE="${CREDENCIALES#*:}"
+          case "$CLAVE" in
+            *[@:/?#\[\]]*) echo "::error::La contraseña dentro de SUPABASE_DB_URL tiene símbolos (@ : / ? # [ ]) que rompen la dirección; cámbiala en Supabase por una de solo letras y números"; FALTAN=1 ;;
+          esac
           exit $FALTAN
 
       - name: Generar respaldo (pg_dump)
@@ -58,11 +64,15 @@ jobs:
 
           # Solo el esquema public (tablas, datos, funciones, políticas RLS y permisos).
           # Los esquemas internos de Supabase (auth, storage, etc.) los administra Supabase.
+          docker pull -q postgres:${PG_MAJOR}-alpine > /dev/null
           if ! docker run --rm -e SUPABASE_DB_URL postgres:${PG_MAJOR}-alpine \
             sh -c 'pg_dump --dbname="$SUPABASE_DB_URL" --schema=public --no-owner --quote-all-identifiers' \
             > respaldo.sql 2> pg_dump.err; then
-            # Mostrar el error de pg_dump como anotación (sin la cadena de conexión)
-            sed -E 's#postgres(ql)?://[^ "]*#[conexión]#g' pg_dump.err | tail -n 5 | while IFS= read -r LINEA; do
+            # Mostrar el error de pg_dump como anotación. El repo es público:
+            # se ocultan las URLs, lo que va entre comillas y cualquier texto con @
+            # (pueden contener partes de la contraseña).
+            sed -E -e 's#postgres(ql)?://[^ ]*#[oculto]#g' -e 's#"[^"]*"#"[oculto]"#g' -e 's#[^ ]*@[^ ]*#[oculto]#g' \
+              pg_dump.err | tail -n 3 | while IFS= read -r LINEA; do
               echo "::error::pg_dump: $LINEA"
             done
             exit 1
