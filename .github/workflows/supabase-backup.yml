@@ -58,9 +58,15 @@ jobs:
 
           # Solo el esquema public (tablas, datos, funciones, políticas RLS y permisos).
           # Los esquemas internos de Supabase (auth, storage, etc.) los administra Supabase.
-          docker run --rm -e SUPABASE_DB_URL postgres:${PG_MAJOR}-alpine \
+          if ! docker run --rm -e SUPABASE_DB_URL postgres:${PG_MAJOR}-alpine \
             sh -c 'pg_dump --dbname="$SUPABASE_DB_URL" --schema=public --no-owner --quote-all-identifiers' \
-            > respaldo.sql
+            > respaldo.sql 2> pg_dump.err; then
+            # Mostrar el error de pg_dump como anotación (sin la cadena de conexión)
+            sed -E 's#postgres(ql)?://[^ "]*#[conexión]#g' pg_dump.err | tail -n 5 | while IFS= read -r LINEA; do
+              echo "::error::pg_dump: $LINEA"
+            done
+            exit 1
+          fi
 
           # Un dump incompleto no termina con esta línea
           if ! tail -n 5 respaldo.sql | grep -q 'PostgreSQL database dump complete'; then
