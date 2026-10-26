@@ -419,14 +419,6 @@ Esto último es clave para poder responder: "¿Por qué el sistema dice que debe
 
 **RNF-21.** El sistema deberá evitar que una misma operación sea contabilizada más de una vez.
 
-## **Seguridad**
-
-**RNF-22.** El sistema deberá proteger la información almacenada frente a modificaciones o eliminaciones accidentales.
-
-**RNF-23.** El sistema deberá utilizar mecanismos adecuados para proteger la información financiera almacenada.
-
-**RNF-24.** El sistema deberá impedir operaciones que puedan generar inconsistencias en la información financiera o de inventario.
-
 ## **Copias de seguridad**
 
 **RNF-25.** El sistema deberá realizar copias de seguridad periódicas de la información almacenada.

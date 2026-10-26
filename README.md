@@ -55,16 +55,17 @@ El sistema está diseñado en torno a 14 bloques funcionales especificados en [`
 
 ## 📊 Estado Actual del Desarrollo
 
-Actualmente, el repositorio cuenta con un **prototipo funcional (MVP Frontend)** construido en React 19 + Vite:
+Actualmente, el repositorio cuenta con un **prototipo funcional** construido en React 19 + Vite, con productos y ventas ya conectados a **Supabase (PostgreSQL)**:
 
 - ✅ **Interfaz de Usuario Completa:** Navegación modular responsive (computador, tablet y móvil).
 - ✅ **Catálogo y Registro de Productos:** Creación con generación automática de SKU según categoría y edición modal.
 - ✅ **Flujo de Venta Interactivo:** Selección visual de productos, carrito dinámico, validación de stock y emisión de tickets.
 - ✅ **Exportación de Ventas:** Descarga de historial en formato CSV.
-- ⚠️ **Simulación de Datos (Play-Pretend):** Actualmente los datos se gestionan en memoria y se sincronizan localmente en `localStorage` mediante [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx) y datos semilla en [`src/data/seedData.js`](src/data/seedData.js).
-- 🎯 **Meta Inmediata:** Transicionar el almacenamiento local a una **base de datos relacional PostgreSQL con backend API** para garantizar persistencia multi-dispositivo, transacciones ACID y entrega al cliente el próximo mes.
+- ✅ **Persistencia Real en PostgreSQL (Supabase):** Inventario, registro de productos, nueva venta e historial de ventas leen y escriben en la base de datos mediante la capa [`src/services/`](src/services/) y TanStack Query. Cada venta es **atómica** (función `process_sale_transaction`): descuenta stock, registra el Kardex y suma el dinero a la cuenta del medio de pago. Detalles en [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md).
+- ⚠️ **Datos de Ejemplo Restantes:** El Panel de Inicio y Estadísticas aún muestran datos semilla de [`src/data/seedData.js`](src/data/seedData.js). Sin credenciales de Supabase, la app funciona en **modo local** (`localStorage`) mediante [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx).
+- 🎯 **Meta Inmediata:** Calcular Panel y Estadísticas desde la base de datos y construir los módulos faltantes (Proveedores, Compras, Kardex, Producción, Tesorería) para la entrega al cliente.
 
-Para consultar el seguimiento detallado de cada uno de los 148 requisitos funcionales y 38 no funcionales, revisa [`docs/seguimiento_requisitos.csv`](docs/seguimiento_requisitos.csv).
+Para consultar el seguimiento detallado de cada uno de los 148 requisitos funcionales y 35 no funcionales, revisa [`docs/seguimiento_requisitos.csv`](docs/seguimiento_requisitos.csv).
 
 ---
 
@@ -73,6 +74,7 @@ Para consultar el seguimiento detallado de cada uno de los 148 requisitos funcio
 ```text
 Vivero/
 ├── docs/                               # Especificación y diseño técnico formal
+│   ├── conexion_base_datos.md          # Conexión del frontend con Supabase
 │   ├── disenio_tecnico_inicial.docx    # Documento de arquitectura por capas
 │   ├── disenio_tecnico_inicial.png     # Diagrama arquitectónico general
 │   ├── requisitos.md                   # Catálogo oficial de RFs y RNFs
@@ -82,11 +84,12 @@ Vivero/
 │   ├── assets/                         # Imágenes e iconografía
 │   ├── components/
 │   │   ├── layout/                     # Barras de navegación y envolventes
-│   │   └── ui/                         # Componentes de notificación (Toast)
+│   │   └── ui/                         # Notificaciones (Toast) y aviso de conexión (DataStatusBanner)
 │   ├── context/
 │   │   └── AppDataContext.jsx          # Estado global y orquestación de datos
 │   ├── data/
-│   │   └── seedData.js                 # Datos semilla iniciales (mock)
+│   │   └── seedData.js                 # Datos semilla iniciales (mock / modo local)
+│   ├── hooks/                          # Hooks de TanStack Query (useProducts)
 │   ├── pages/                          # Vistas principales del sistema
 │   │   ├── Dashboard.jsx               # Panel de control e indicadores
 │   │   ├── Inventory.jsx               # Tabla de inventario y edición
@@ -94,13 +97,15 @@ Vivero/
 │   │   ├── NewSale.jsx                 # Terminal Punto de Venta (POS)
 │   │   ├── Sales.jsx                   # Historial de ventas y comprobantes
 │   │   └── Statistics.jsx              # Métricas financieras y gráficos
+│   ├── services/                       # Cliente Supabase y servicios de productos y ventas
 │   ├── styles/                         # Variables CSS y estilos globales
 │   ├── utils/                          # Utilidades matemáticas, moneda COP y exportación
 │   ├── App.jsx                         # Enrutador principal (React Router v7)
 │   └── main.jsx                        # Punto de entrada de la aplicación
 ├── supabase/                           # Scripts SQL para PostgreSQL y Supabase
 │   ├── schema.sql                      # Esquema DDL completo (tablas, RLS, procedimientos)
-│   └── seed.sql                        # Datos semilla iniciales del catálogo y cuentas
+│   ├── seed.sql                        # Datos semilla iniciales del catálogo y cuentas
+│   └── migration_01_conexion_frontend.sql # Venta atómica v2, consecutivo VTA, Kardex inicial y permisos
 ├── ARCHITECTURE.md                     # Arquitectura de software y flujos de datos
 ├── CONTRIBUTING.md                     # Guía de contribución y ramas de Git
 ├── ROADMAP.md                          # Plan de trabajo a 4 semanas para entrega
@@ -157,12 +162,12 @@ En el directorio del proyecto puedes ejecutar:
 
 ## 🏗️ Arquitectura y Stack Tecnológico
 
-El proyecto se encuentra en transición de un prototipo frontend hacia una solución cliente-servidor completa:
+El proyecto ya opera como solución cliente-servidor sobre Supabase:
 
-- **Frontend Actual:** React 19, Vite 8, React Router DOM 7, Lucide Icons, CSS Modular con variables nativas.
-- **Backend Propuesto:** Node.js (Express / Fastify) + TypeScript + Prisma ORM o servicio PostgreSQL backend (Supabase).
-- **Base de Datos Definitiva:** **PostgreSQL** relacional con soporte ACID (evaluación y descarte fundamentado de NoSQL en [`TECHSTACK.md`](TECHSTACK.md)).
-- **Despliegue Proyectado:** Frontend en Vercel/Netlify; Backend y Base de Datos en Supabase / Railway.
+- **Frontend:** React 19, Vite 8, React Router DOM 7, TanStack Query v5, Lucide Icons, CSS Modular con variables nativas.
+- **Backend:** ✅ **Supabase** (API REST autogenerada sobre PostgreSQL + funciones SQL transaccionales vía RPC).
+- **Base de Datos:** ✅ **PostgreSQL** relacional con soporte ACID (evaluación y descarte fundamentado de NoSQL en [`TECHSTACK.md`](TECHSTACK.md)).
+- **Despliegue:** Frontend en Cloudflare Pages; Base de Datos en Supabase (ver [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md)).
 
 Para revisar la justificación arquitectónica completa y el análisis comparativo de bases de datos, consulta [`TECHSTACK.md`](TECHSTACK.md) y [`ARCHITECTURE.md`](ARCHITECTURE.md).
 
@@ -180,7 +185,8 @@ El repositorio cuenta con documentación exhaustiva para guiar el desarrollo:
 6. [**`CONTRIBUTING.md`**](CONTRIBUTING.md): Guía de estilo, convención de ramas y flujo de pull requests.
 7. [**`docs/requisitos.md`**](docs/requisitos.md): Especificación formal de requisitos funcionales y no funcionales.
 8. [**`docs/seguimiento_requisitos.csv`**](docs/seguimiento_requisitos.csv): Matriz de progreso requisito por requisito.
-9. [**`supabase/schema.sql`**](supabase/schema.sql) & [**`supabase/seed.sql`**](supabase/seed.sql): Scripts SQL ejecutables para el aprovisionamiento de PostgreSQL, políticas RLS, función transaccional ACID y datos de prueba.
+9. [**`docs/conexion_base_datos.md`**](docs/conexion_base_datos.md): Cómo se conectaron productos y ventas con Supabase, pruebas realizadas y limitaciones conocidas.
+10. [**`supabase/schema.sql`**](supabase/schema.sql), [**`supabase/seed.sql`**](supabase/seed.sql) & [**`supabase/migration_01_conexion_frontend.sql`**](supabase/migration_01_conexion_frontend.sql): Scripts SQL ejecutables para el aprovisionamiento de PostgreSQL, función transaccional ACID y datos de prueba.
 
 ---
 

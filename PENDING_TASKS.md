@@ -2,6 +2,9 @@
 
 > **Criterio de Inclusión:** Todas las tareas de este checklist son **100% implementables en este instante**, utilizando únicamente el código fuente existente en React 19, JavaScript y CSS, **sin necesidad de esperar servicios externos, bases de datos remotas ni integraciones de nube**.
 
+> [!NOTE]
+> **Actualización tras la conexión con Supabase ([`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)):** productos y ventas ya se persisten en PostgreSQL. Las tareas que tocan esos datos deben implementarse a través de [`src/services/`](src/services/) cuando haya credenciales, conservando el **modo local** (`localStorage`) como respaldo. Las tablas `inventory_movements`, `money_movements`, `accounts`, `suppliers`, `purchases`, `production_batches`, `custom_merch_orders` y `reconciliations` ya existen en [`supabase/schema.sql`](supabase/schema.sql).
+
 ---
 
 ## 🎯 Resumen de Priorización
@@ -57,6 +60,7 @@ pie title Distribución de Tareas Inmediatas por Módulo
 - [ ] **2.5. Balance y Resumen Financiero Diario ([RF-115 a RF-122](docs/requisitos.md#L295-L310))**
   - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx)
   - **Acción:** Mostrar desglose de saldo disponible agrupado por medio: **Efectivo en Caja Menor**, **Bancolombia** y **Nequi**, actualizados según las ventas registradas.
+  - **Avance:** ✅ En Supabase, cada venta ya suma su total a `accounts.current_balance` y registra un `INGRESO_VENTA` en `money_movements`. Falta leer esos saldos y mostrarlos.
 
 ---
 
@@ -69,6 +73,7 @@ pie title Distribución de Tareas Inmediatas por Módulo
 - [ ] **3.2. Historial de Movimientos de Inventario (Kardex en memoria) ([RF-28 a RF-30](docs/requisitos.md#L71-L75))**
   - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx)
   - **Acción:** Añadir colección `inventoryMovements` que guarde cada cambio de stock (sea por venta, ajuste manual o compra), mostrando un modal de "Ver Kardex" por producto.
+  - **Avance:** ✅ En Supabase, la tabla `inventory_movements` ya registra automáticamente el stock inicial (`INICIAL`) y cada venta (`SALIDA_VENTA`). Falta la lectura en un servicio y el modal "Ver Kardex".
 - [ ] **3.3. Control de Activar / Desactivar Producto ([RF-08](docs/requisitos.md#L23))**
   - **Archivos:** [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx)
   - **Acción:** El campo `active` ya existe en el modelo, pero el modal de edición solo muestra texto estático. Reemplazarlo por un selector o *switch* interactivo (Activo / Inactivo). Los productos inactivos deben quedar ocultos en Nueva Venta pero permanecer visibles en Inventario con un badge "Inactivo".
@@ -157,6 +162,7 @@ pie title Distribución de Tareas Inmediatas por Módulo
 - [ ] **8.3. Validaciones de Negocio Estrictas ([RNF-16](docs/requisitos.md#L409), [RNF-17](docs/requisitos.md#L412))**
   - **Archivos:** [`src/pages/NewProduct.jsx`](src/pages/NewProduct.jsx), [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx)
   - **Acción:** Bloquear precios o costos negativos o iguales a cero, validar formato numérico de teléfono y número de documento del cliente.
+  - **Avance:** ✅ La BD ya rechaza cantidades, precios y descuentos inválidos en las ventas y recalcula los totales en el servidor. Faltan las validaciones en los formularios.
 
 ---
 

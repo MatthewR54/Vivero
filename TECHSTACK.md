@@ -9,10 +9,9 @@ Este documento establece la propuesta técnica y arquitectónica definitiva para
 | Capa / Componente | Tecnología Seleccionada | Justificación Técnica Clave |
 | :--- | :--- | :--- |
 | **Frontend** | **React 19 + Vite 8** *(Existente)* | Ya estructurado en el repositorio; tiempo de compilación ultrarrápido (1.3 s), renderizado reactivo eficiente y componentes modulares listos. |
-| **Cliente de Datos / Cache** | **TanStack Query (React Query v5)** | Reemplaza la manipulación manual de `localStorage`, gestionando estado del servidor, reintentos, cache en memoria y estados de carga (`isLoading`, `isError`). |
-| **Base de Datos** | **PostgreSQL 16+** | **Relacional con ACID estricto**. Imprescindible para conciliaciones contables, arqueos de caja, trazabilidad de lotes de cultivo y kardex de inventario. Columnas `JSONB` para atributos dinámicos de merchandising. |
-| **Backend & API** | **Node.js (TypeScript) + Express / Fastify con Prisma ORM** *(o Supabase BaaS)* | Unifica el lenguaje con el frontend (JavaScript/TypeScript), eliminando la fricción de cambio de contexto en el equipo. Generación de tipos automática y migraciones declarativas seguras. |
-| **Autenticación & Seguridad** | **JWT con Cookies HttpOnly / Supabase Auth** | Control de acceso basado en roles (RBAC: *Administrador*, *Ventas*, *Producción*), mitigación de XSS/CSRF y protección de datos financieros sensibles. |
+| **Cliente de Datos / Cache** | **TanStack Query (React Query v5)** ✅ *Integrado* | Reemplaza la manipulación manual de `localStorage`, gestionando estado del servidor, reintentos, cache en memoria y estados de carga (`isLoading`, `isError`). |
+| **Base de Datos** | **PostgreSQL 16+** ✅ *En uso (Supabase)* | **Relacional con ACID estricto**. Imprescindible para conciliaciones contables, arqueos de caja, trazabilidad de lotes de cultivo y kardex de inventario. Columnas `JSONB` para atributos dinámicos de merchandising. |
+| **Backend & API** | **Supabase BaaS** ✅ *Adoptado* *(alternativa evaluada: Node.js + Express / Fastify con Prisma ORM)* | API REST autogenerada sobre PostgreSQL y lógica transaccional en funciones SQL (RPC), sin servidor propio que mantener. |
 | **Infraestructura & Despliegue** | **Vercel (Frontend) + Supabase / Railway (Backend + DB)** | Niveles de uso gratuitos y de bajo costo ideales para proyectos de labor social; copias de seguridad automatizadas diarias (RNF-25), alta disponibilidad (RNF-14) y cero mantenimiento de servidores. |
 
 ---
@@ -82,7 +81,6 @@ flowchart LR
         API["Node.js / Express o Fastify (TypeScript)"]
         Validation["Validación Zod"]
         ORM["Prisma ORM"]
-        Auth["JWT / Middleware RBAC"]
     end
 
     subgraph Persistencia ["Capa de Datos (Almacenamiento)"]
@@ -94,8 +92,7 @@ flowchart LR
     Router --> Query
     Query -->|"HTTPS / REST (JSON)"| API
     API --> Validation
-    Validation --> Auth
-    Auth --> ORM
+    Validation --> ORM
     ORM -->|"SQL / Pool Conexiones"| PG
     PG -.->|"Backup Snapshots"| Backup
 ```
@@ -103,8 +100,8 @@ flowchart LR
 ### 3.1. Frontend: React 19 + Vite 8
 - **Estado actual:** El código existente en `src/` ya cuenta con vistas responsive bien maquetadas (`Dashboard.jsx`, `Inventory.jsx`, `NewProduct.jsx`, `NewSale.jsx`, `Sales.jsx`, `Statistics.jsx`).
 - **Cambios inmediatos para producción:**
-  1. Reemplazar la persistencia local de `AppDataContext.jsx` por consumo de API mediante **TanStack Query**.
-  2. Implementar interceptores HTTP para enviar tokens de autenticación y manejar errores globales de red con los Toasts ya creados.
+  1. ~~Reemplazar la persistencia local de `AppDataContext.jsx` por consumo de API mediante **TanStack Query**.~~ ✅ Productos y ventas se cargan con TanStack Query desde Supabase (`localStorage` queda como modo local sin credenciales).
+  2. ~~Manejar errores globales de red con los Toasts ya creados.~~ ✅ Errores de escritura mostrados con Toasts y aviso global de carga/conexión en `DataStatusBanner.jsx`.
   3. Validar filtros reales en servidor para rangos de fechas (Día, Semana, Mes, Rango personalizado).
 
 ### 3.2. Backend: Node.js (TypeScript) + Express / Fastify + Prisma ORM
@@ -114,10 +111,9 @@ Considerando que el equipo ya domina JavaScript/React y que el plazo de entrega 
 - **¿Por qué Prisma ORM?**
   Prisma ofrece un esquema declarativo legible (`schema.prisma`), migraciones automáticas seguras y un cliente con tipado estricto que previene errores de sintaxis SQL en tiempo de compilación.
 
-#### 💡 Alternativa de Máxima Rapidez: Supabase (PostgreSQL Gestionado + Auth)
+#### 💡 Alternativa de Máxima Rapidez: Supabase (PostgreSQL Gestionado) — ✅ Opción adoptada por el equipo
 Si el tiempo del equipo es extremadamente limitado durante las próximas dos semanas, **Supabase** es la vía más rápida y recomendada:
 - Provee una base de datos PostgreSQL real y completa.
-- Sistema de Autenticación listo para usar (usuarios, roles, contraseñas encriptadas con bcrypt).
 - API REST generada instantáneamente a partir de las tablas de PostgreSQL.
 - Copias de seguridad automáticas diarias incluidas en la capa gratuita (cumple RNF-25 inmediatamente).
 - La lógica transaccional compleja (ej. cerrar venta y descontar stock) se ejecuta mediante funciones SQL (`RPC`) seguras.
@@ -133,10 +129,6 @@ El siguiente diagrama modela la totalidad de los requisitos funcionales del sist
 
 ```mermaid
 erDiagram
-    USERS ||--o{ SALES : "registra"
-    USERS ||--o{ PURCHASES : "registra"
-    USERS ||--o{ RECONCILIATIONS : "ejecuta"
-
     CATEGORIES ||--o{ PRODUCTS : "clasifica"
     SUPPLIERS ||--o{ PURCHASES : "provee"
     SUPPLIERS ||--o{ PRODUCTS : "suministra"
@@ -161,16 +153,6 @@ erDiagram
 
     SALES ||--o{ MONEY_MOVEMENTS : "genera_ingreso"
     PURCHASES ||--o{ MONEY_MOVEMENTS : "genera_egreso"
-
-    USERS {
-        uuid id PK
-        string email UK
-        string password_hash
-        string full_name
-        string role "ADMIN | VENDEDOR | OPERADOR"
-        boolean active
-        timestamp created_at
-    }
 
     CATEGORIES {
         int id PK
@@ -219,7 +201,6 @@ erDiagram
     PURCHASES {
         uuid id PK
         int supplier_id FK
-        uuid user_id FK
         date purchase_date
         decimal total_cost
         string invoice_number
@@ -277,7 +258,6 @@ erDiagram
     SALES {
         uuid id PK
         string sale_code UK "VTA-001"
-        uuid user_id FK
         string customer_name
         string customer_document
         string customer_phone
@@ -321,7 +301,6 @@ erDiagram
     RECONCILIATIONS {
         uuid id PK
         int account_id FK
-        uuid user_id FK
         date reconciliation_date
         decimal system_expected_balance
         decimal physical_counted_balance
@@ -338,18 +317,18 @@ erDiagram
 
 Actualmente, [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx) orquesta las operaciones en memoria con persistencia en `localStorage`. Para dar el salto a producción sin romper la interfaz existente, se seguirá este procedimiento:
 
-### Fase 1: Creación del Script de Siembra (Seed Script)
+### Fase 1: Creación del Script de Siembra (Seed Script) — ✅ Completada
 Los datos de prueba existentes en [`src/data/seedData.js`](src/data/seedData.js) (productos, clientes, transacciones históricas) han sido estructurados en el archivo ejecutable [`supabase/seed.sql`](supabase/seed.sql) para poblar la base de datos PostgreSQL en el primer despliegue.
 
-### Fase 2: Capa de Servicios de API (`src/services/`)
-Se crearán módulos de consumo HTTP con `fetch` o `axios`:
-- `services/productsService.js`: `getProducts()`, `createProduct()`, `updateProduct()`.
-- `services/salesService.js`: `getSales()`, `createSale()`, `getSaleById()`.
+### Fase 2: Capa de Servicios de API (`src/services/`) — ⏳ Parcial
+Módulos de consumo de datos sobre `@supabase/supabase-js`:
+- ✅ `services/productsService.js`: `fetchProducts()`, `createProduct()`, `updateProduct()`.
+- ✅ `services/salesService.js`: `fetchSales()`, `createSale()` (RPC `process_sale_transaction`).
 - `services/inventoryService.js`: `getMovements()`, `adjustStock()`.
 - `services/financeService.js`: `getBalances()`, `reconcileAccount()`, `getDailySummary()`.
 
-### Fase 3: Transición de `AppDataContext` a React Query
-En lugar de mutar un objeto gigante de datos en `localStorage`, cada componente consumirá sus datos mediante hooks especializados:
+### Fase 3: Transición de `AppDataContext` a React Query — ⏳ Parcial
+✅ Productos y ventas ya se consultan con `useQuery` dentro de `AppDataContext` (con invalidación tras cada escritura). Panel y Estadísticas siguen con datos de ejemplo. El objetivo final es que cada componente consuma sus datos mediante hooks especializados:
 ```javascript
 // Ejemplo de migración en Inventory.jsx
 export function useProducts(filters) {
@@ -369,8 +348,7 @@ export function useProducts(filters) {
 | :--- | :--- | :--- |
 | **RNF-11 a RNF-13** | Rendimiento y Escalabilidad | PostgreSQL indexa campos clave (`sku`, `created_at`, `sale_code`). La paginación en backend evita sobrecargar el navegador. |
 | **RNF-14 y RNF-15** | Disponibilidad y Portabilidad | Backend desplegado en nube pública accesible desde cualquier computador, tablet o teléfono con conexión a Internet. |
-| **RNF-16 a RNF-21** | Integridad de la Información | Restricciones de llaves foráneas (`FOREIGN KEY`), validaciones `CHECK (stock >= 0)`, y transacciones ACID en checkout. |
-| **RNF-22 a RNF-24** | Seguridad y Control Financiero | Contraseñas protegidas con algoritmos de hashing seguros (Argon2 / bcrypt); validación estricta de saldos en servidor. |
+| **RNF-16 a RNF-21** | Integridad de la Información | Restricciones de llaves foráneas (`FOREIGN KEY`), validaciones `CHECK (stock >= 0)`, y transacciones ACID en checkout. ✅ Venta atómica con totales recalculados en servidor (`process_sale_transaction`). |
 | **RNF-25 a RNF-27** | Copias de Seguridad | Backups diarios automáticos y recuperación a un punto en el tiempo (PITR) provistos por el proveedor de PostgreSQL. |
 | **RNF-28 y RNF-29** | Compatibilidad y Responsive | Build optimizado con Vite, CSS con diseño elástico y navegación optimizada para pantallas táctiles y de escritorio. |
 
@@ -380,8 +358,8 @@ export function useProducts(filters) {
 
 Para estar listos para el cliente en 4 semanas con un equipo con recursos de tiempo acotados:
 
-1. **Base de Datos:** **PostgreSQL** alojado en Supabase o Railway. **Se descarta rotundamente NoSQL** por riesgos contables y operativos.
-2. **Backend:** **Node.js (TypeScript) + Express con Prisma ORM** (o API de Supabase con funciones SQL transaccionales).
-3. **Frontend:** Mantener la base actual en **React 19 + Vite**, integrando **TanStack Query** para la comunicación con el servidor.
+1. **Base de Datos:** **PostgreSQL** alojado en Supabase o Railway. **Se descarta rotundamente NoSQL** por riesgos contables y operativos. ✅ *En uso: Supabase.*
+2. **Backend:** **Node.js (TypeScript) + Express con Prisma ORM** (o API de Supabase con funciones SQL transaccionales). ✅ *Adoptado: API de Supabase + funciones SQL (RPC).*
+3. **Frontend:** Mantener la base actual en **React 19 + Vite**, integrando **TanStack Query** para la comunicación con el servidor. ✅ *TanStack Query integrado.*
 
 Consulta el plan cronológico detallado en [`ROADMAP.md`](ROADMAP.md) y la arquitectura de flujos en [`ARCHITECTURE.md`](ARCHITECTURE.md).

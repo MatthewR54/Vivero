@@ -10,14 +10,14 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados (Frontend)" : 17
-    "En Progreso / Parciales" : 14
-    "Simulados (Play-Pretend / Fijos)" : 28
-    "No Iniciados (Falta Backend/Módulo)" : 89
+    "Completados" : 19
+    "En Progreso / Parciales" : 18
+    "Simulados (Play-Pretend / Fijos)" : 18
+    "No Iniciados (Falta Módulo)" : 93
 ```
 
 ### Principales Simulaciones a Eliminar:
-1. **Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-22, RNF-37).
+1. ~~**Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-37).~~ ✅ Productos y ventas ya se leen y escriben en Supabase (ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)). `localStorage` queda solo como modo local sin credenciales y para los datos de ejemplo del Panel/Estadísticas.
 2. **Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).
 3. **Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) muestra "$0.00 Diferencia (Cuadrado)" sin permitir ingresar el conteo físico de dinero real ni registrar justificaciones (RF-102 a RF-104).
 4. **Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.
@@ -32,9 +32,8 @@ gantt
     title Plan de Entrega a Producción (4 Semanas)
     dateFormat  YYYY-MM-DD
     section Sprint 1: Persistencia & API
-    Despliegue PostgreSQL & Migraciones     :s1_1, 2026-10-15, 3d
-    Autenticación y Roles (RBAC)           :s1_2, after s1_1, 2d
-    Migración Productos/Ventas a API       :s1_3, after s1_2, 3d
+    Despliegue PostgreSQL & Migraciones     :done, s1_1, 2026-10-15, 3d
+    Migración Productos/Ventas a API       :done, s1_3, after s1_1, 3d
     section Sprint 2: Core ERP & Kardex
     Módulo de Proveedores                  :s2_1, 2026-10-22, 2d
     Módulo de Compras & Costo Promedio     :s2_2, after s2_1, 3d
@@ -51,22 +50,19 @@ gantt
 ---
 
 ### 🚀 Sprint 1 (Semana 1): Capa de Datos Real y Backend Base
-> **Objetivo:** Erradicar `localStorage` y conectar el frontend existente a una base de datos relacional con autenticación.
+> **Objetivo:** Erradicar `localStorage` y conectar el frontend existente a una base de datos relacional.
 
 - [x] **Infraestructura de Datos:**
   - ~~Crear proyecto PostgreSQL en Supabase / Railway.~~ ✅ Proyecto Supabase creado y configurado.
-  - ~~Ejecutar migraciones del esquema relacional definido en [`TECHSTACK.md`](TECHSTACK.md).~~ ✅ Esquema ejecutado vía `supabase/schema.sql`.
+  - ~~Ejecutar migraciones del esquema relacional definido en [`TECHSTACK.md`](TECHSTACK.md).~~ ✅ Esquema ejecutado vía `supabase/schema.sql` + `supabase/migration_01_conexion_frontend.sql`.
   - ~~Ejecutar script de seed inicial con los datos de [`src/data/seedData.js`](src/data/seedData.js).~~ ✅ Datos semilla cargados vía `supabase/seed.sql`.
-- [ ] **Autenticación & Seguridad:**
-  - Implementar login con correo y contraseña.
-  - Generar sesión con JWT y control de roles (*Administrador*, *Vendedor*, *Operador*).
-  - Añadir pantalla de inicio de sesión (`/login`) y protección de rutas en React Router.
 - [x] **Migración de Módulos Existentes:**
   - ~~Instalar `@tanstack/react-query` en el frontend.~~ ✅ Instalado `@tanstack/react-query` v5 y `@supabase/supabase-js`. `QueryClientProvider` configurado en `src/main.jsx` con caché de 5 min, gc de 30 min y retry de 1 intento.
-  - ~~Crear cliente Supabase y capa de servicios.~~ ✅ Creados `src/services/supabaseClient.js`, `src/services/productsService.js` y `src/hooks/useProducts.js`.
-  - Conectar [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx) al endpoint `GET /api/products` y `PATCH /api/products/:id`.
-  - Conectar [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx) al endpoint transaccional `POST /api/sales`.
-  - Conectar [`src/pages/Sales.jsx`](src/pages/Sales.jsx) con paginación y búsqueda en servidor.
+  - ~~Crear cliente Supabase y capa de servicios.~~ ✅ Creados `src/services/supabaseClient.js`, `src/services/productsService.js`, `src/services/salesService.js` y `src/hooks/useProducts.js`.
+  - ~~Conectar [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx) al endpoint `GET /api/products` y `PATCH /api/products/:id`.~~ ✅ Inventario y Registro de Producto leen/escriben la tabla `products` vía `productsService.js` (el stock inicial queda en el Kardex por trigger).
+  - ~~Conectar [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx) al endpoint transaccional `POST /api/sales`.~~ ✅ Nueva Venta usa la función RPC `process_sale_transaction` (venta atómica: stock, detalle, Kardex `SALIDA_VENTA` y entrada de dinero en la cuenta del medio de pago).
+  - ~~Conectar [`src/pages/Sales.jsx`](src/pages/Sales.jsx) al historial en servidor.~~ ✅ El historial se lee de `sales` + `sale_items`. ⏳ *Pendiente:* paginación y búsqueda en servidor (hoy se cargan todas las ventas y se filtra en el navegador).
+  - ✅ Aviso de carga / error de conexión (`DataStatusBanner.jsx`) y **modo local** automático cuando no hay credenciales de Supabase.
 
 ---
 
@@ -81,6 +77,7 @@ gantt
   - Actualización automática de existencias al ingresar una compra.
   - Recálculo automático del **costo promedio ponderado** (RF-33).
 - [ ] **Kardex y Movimientos de Inventario (RF-24 a RF-30):**
+  - ✅ *Avance:* la tabla `inventory_movements` ya registra automáticamente el stock inicial (`INICIAL`) y las salidas por venta (`SALIDA_VENTA`).
   - Pantalla o pestaña de *Historial de Movimientos* por producto.
   - Modal para **Ajustes de Inventario** con campo obligatorio de justificación/motivo (merma, rotura, donación social).
 
@@ -125,7 +122,7 @@ gantt
   - Pruebas de diseño responsive en teléfonos inteligentes y tabletas (RNF-07 a RNF-10).
   - Verificación de copias de seguridad automáticas (RNF-25).
   - Despliegue final en producción (Frontend en Cloudflare Pages, Backend en Supabase).
-  - Capacitación del cliente y entrega formal de credenciales.
+  - Capacitación del cliente y entrega formal de los accesos a los servicios (Supabase, Cloudflare Pages).
 
 ---
 
@@ -133,9 +130,9 @@ gantt
 
 | Riesgo Identificado | Impacto | Probabilidad | Estrategia de Mitigación |
 | :--- | :---: | :---: | :--- |
-| **Poco tiempo del equipo para desarrollar backend desde cero** | Alto | Alta | **Usar Supabase BaaS**. Permite tener PostgreSQL, autenticación y API REST operativa en 2 días, ahorrando más del 60% del tiempo de desarrollo de backend. |
+| **Poco tiempo del equipo para desarrollar backend desde cero** | Alto | Alta | ✅ **Mitigado: se adoptó Supabase BaaS**. PostgreSQL y API REST operativos sin escribir un backend propio; la lógica transaccional vive en funciones SQL (RPC). |
 | **Resistencia o errores del usuario al registrar arqueos de caja** | Alto | Media | Interfaz simple paso a paso con advertencias claras de color ante faltantes y recordatorio amable de registrar la justificación. |
-| **Pérdida de conectividad a internet en el vivero físico** | Medio | Media | El navegador mantiene la sesión abierta; en caso de caída temporal, el POS muestra alerta informativa clara para reintentar al reconectar. |
+| **Pérdida de conectividad a internet en el vivero físico** | Medio | Media | La app permanece abierta en el navegador; en caso de caída temporal, el aviso de conexión (`DataStatusBanner`) y el POS muestran una alerta clara para reintentar al reconectar. |
 
 ---
 
