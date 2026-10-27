@@ -42,21 +42,21 @@ pie title Distribución de Tareas Inmediatas por Módulo
 
 ---
 
-## 🟡 2. Tesorería y Arqueo de Caja Interactivo (Conciliación)
-*Actualmente en [`Statistics.jsx`](src/pages/Statistics.jsx) el arqueo muestra "$0.00 (Cuadrado)" de forma fija y no permite registrar el conteo real ni justificaciones.*
+## 🟡 2. Tesorería y Arqueo de Caja Interactivo (Conciliación) — ✅ Completado
+*En [`Statistics.jsx`](src/pages/Statistics.jsx) ahora es posible realizar arqueos de efectivo y conciliación bancaria/digital en tiempo real, registrar traslados entre cuentas, exigir justificaciones ante descuadres y consultar el historial completo en Supabase.*
 
-- [ ] **2.1. Modal de Arqueo Físico de Caja ([RF-102](docs/requisitos.md#L264))**
-  - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx), [`src/pages/Statistics.css`](src/pages/Statistics.css)
-  - **Acción:** Añadir botón "Realizar Arqueo de Caja" que despliegue un modal con el saldo esperado del sistema (calculado como saldo inicial + ventas en efectivo - compras en efectivo) y un campo numérico para ingresar el dinero físico contado.
-- [ ] **2.2. Cálculo Automático de Descuadre ([RF-103](docs/requisitos.md#L266))**
+- [x] **2.1. Modal de Arqueo Físico de Caja y Cuentas ([RF-102](docs/requisitos.md#L264))**
+  - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx), [`src/pages/Statistics.css`](src/pages/Statistics.css), [`src/services/financeService.js`](src/services/financeService.js)
+  - **Acción:** Botón "Realizar Arqueo" (y botones directos por cuenta: Efectivo, Nequi, Bancolombia) que despliegan el modal con el saldo esperado del sistema y un campo numérico para ingresar el dinero físico contado o saldo en extracto, además del modal "Trasladar Fondos" entre cuentas ([RF-101](docs/requisitos.md#L262)).
+- [x] **2.2. Cálculo Automático de Descuadre ([RF-103](docs/requisitos.md#L266))**
   - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx)
-  - **Acción:** Calcular en tiempo real la diferencia (`dinero_contado - saldo_esperado`). Si es `0`, mostrar indicador verde "Cuadrado"; si es negativo, mostrar "Faltante en Caja" en rojo; si es positivo, "Sobrante" en amarillo.
-- [ ] **2.3. Justificación Obligatoria de Descuadres ([RF-104](docs/requisitos.md#L268))**
-  - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx)
-  - **Acción:** Si `diferencia !== 0`, hacer obligatorio un campo de texto `justificacion` antes de permitir guardar el arqueo (ejemplo: "Gasto de transporte no registrado", "Cambio mal entregado").
-- [ ] **2.4. Historial de Conciliaciones en Estado ([RF-132](docs/requisitos.md#L332))**
-  - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx)
-  - **Acción:** Añadir array `reconciliations: []` en el contexto y función `addReconciliation()`. Guardar la fecha, hora, saldo esperado, saldo real, diferencia y justificación.
+  - **Acción:** Calcula en tiempo real la diferencia (`dinero_contado - saldo_esperado`). Si es `0`, muestra indicador verde "Cuadrado"; si es negativo, muestra "Faltante en Caja" en rojo; si es positivo, "Sobrante" en amarillo.
+- [x] **2.3. Justificación Obligatoria de Descuadres ([RF-104](docs/requisitos.md#L268))**
+  - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx), [`src/services/financeService.js`](src/services/financeService.js)
+  - **Acción:** Si `diferencia !== 0`, hace obligatorio el campo de texto `justificacion` antes de permitir guardar el arqueo (con `status: 'DESCUADRE_JUSTIFICADO'`), y permite ajustar el saldo de la cuenta generando un movimiento `AJUSTE_CONCILIACION`.
+- [x] **2.4. Historial de Conciliaciones en Base de Datos y Estado ([RF-132](docs/requisitos.md#L332))**
+  - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/services/financeService.js`](src/services/financeService.js), [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx)
+  - **Acción:** Funciones `addReconciliation()` y `transferBetweenAccounts()` conectadas a Supabase (`reconciliations`, `accounts`, `money_movements`) y tabla de *Historial de Arqueos y Conciliaciones Registradas* en Estadísticas.
 - [x] **2.5. Balance y Resumen Financiero Diario ([RF-115 a RF-122](docs/requisitos.md#L295-L310))**
   - **Archivos:** [`src/services/financeService.js`](src/services/financeService.js), [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx), [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx)
   - **Acción:** Mostrar desglose de saldo disponible agrupado por medio: **Efectivo en Caja Menor**, **Bancolombia** y **Nequi**, actualizados según las ventas registradas en `accounts`.

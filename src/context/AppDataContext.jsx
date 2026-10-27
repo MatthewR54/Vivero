@@ -16,7 +16,9 @@ import {
   fetchAccounts,
   fetchMoneyMovements,
   fetchReconciliations,
-  fetchProductionBatches
+  fetchProductionBatches,
+  createReconciliation as createReconciliationDb,
+  createAccountTransfer as createAccountTransferDb
 } from '../services/financeService';
 
 // ============================================================
@@ -38,6 +40,45 @@ const FALLBACK_ACCOUNTS = [
   { id: 1, name: 'Efectivo Caja Menor', accountType: 'EFECTIVO', balance: 720000, active: true },
   { id: 2, name: 'Nequi Comunitario', accountType: 'BILLETERA_DIGITAL', balance: 1150000, active: true },
   { id: 3, name: 'Bancolombia Principal', accountType: 'BANCO', balance: 600000, active: true }
+];
+
+const FALLBACK_RECONCILIATIONS = [
+  {
+    id: 'rec-seed-1',
+    accountId: 1,
+    accountName: 'Efectivo Caja Menor',
+    date: getTodayString(),
+    expectedBalance: 720000,
+    countedBalance: 720000,
+    difference: 0,
+    justification: 'Arqueo de cierre de turno cuadrado 100%',
+    status: 'CUADRADO',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'rec-seed-2',
+    accountId: 2,
+    accountName: 'Nequi Comunitario',
+    date: getTodayString(),
+    expectedBalance: 1150000,
+    countedBalance: 1150000,
+    difference: 0,
+    justification: 'Saldos validados contra app Nequi',
+    status: 'CUADRADO',
+    createdAt: new Date().toISOString()
+  },
+  {
+    id: 'rec-seed-3',
+    accountId: 3,
+    accountName: 'Bancolombia Principal',
+    date: getTodayString(),
+    expectedBalance: 600000,
+    countedBalance: 600000,
+    difference: 0,
+    justification: 'Conciliado con extracto digital Bancolombia',
+    status: 'CUADRADO',
+    createdAt: new Date().toISOString()
+  }
 ];
 
 const FALLBACK_PRODUCTION_BATCHES = [
@@ -94,6 +135,7 @@ function freshLocalData() {
     alerts: seedAlerts,
     statistics: seedStatistics,
     accounts: FALLBACK_ACCOUNTS,
+    reconciliations: FALLBACK_RECONCILIATIONS,
     productionBatches: FALLBACK_PRODUCTION_BATCHES,
     nextSaleId: seedNextSaleId,
     nextProductId: { ...seedNextProductId }
@@ -232,8 +274,8 @@ export function AppDataProvider({ children }) {
     [moneyMovementsQuery.data]
   );
   const reconciliations = useMemo(
-    () => (USE_SUPABASE ? reconciliationsQuery.data ?? [] : []),
-    [reconciliationsQuery.data]
+    () => (USE_SUPABASE ? reconciliationsQuery.data ?? [] : (data.reconciliations ?? FALLBACK_RECONCILIATIONS)),
+    [reconciliationsQuery.data, data.reconciliations]
   );
   const productionBatches = useMemo(
     () => (USE_SUPABASE ? productionBatchesQuery.data ?? FALLBACK_PRODUCTION_BATCHES : (data.productionBatches ?? FALLBACK_PRODUCTION_BATCHES)),
@@ -290,7 +332,7 @@ export function AppDataProvider({ children }) {
       ...tx,
       date: tx.date || salesById.get(tx.id)?.date || getTodayString()
     }));
-  }, [ sales, moneyMovements, data.transactions, data.sales ]);
+  }, [sales, moneyMovements, data.transactions, data.sales]);
 
   // Genera alertas dinámicas evaluando stock actual de productos + lotes de cultivo activos (RF-32, RF-146, RF-147)
   const alerts = useMemo(() => {
@@ -454,6 +496,153 @@ export function AppDataProvider({ children }) {
     }));
   }, [queryClient]);
 
+  // ---------- Arqueo / Conciliación de Cuentas (RF-102 a RF-104) ----------
+  const addReconciliation = useCallback(async ({
+    accountId,
+    expectedBalance,
+    countedBalance,
+    justification,
+    adjustAccountBalance = true
+  }) => {
+    if (USE_SUPABASE) {
+      const created = await createReconciliationDb({
+        accountId,
+        expectedBalance,
+        countedBalance,
+        justification,
+        adjustAccountBalance
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['reconciliations'] }),
+        queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+        queryClient.invalidateQueries({ queryKey: ['moneyMovements'] })
+      ]);
+      return created;
+    }
+
+    // Modo local (localStorage)
+    const expected = Number(expectedBalance);
+    const counted = Number(countedBalance);
+    const difference = counted - expected;
+    const trimmedJustification = (justification ?? '').trim();
+
+    if (difference !== 0 && !trimmedJustification) {
+      throw new Error('La justificación es obligatoria cuando existe un descuadre');
+    }
+
+    const status = difference === 0 ? 'CUADRADO' : 'DESCUADRE_JUSTIFICADO';
+    const today = getTodayString();
+    const targetAcc = accounts.find(a => a.id === Number(accountId));
+    const newRecon = {
+      id: `REC-${Date.now()}`,
+      accountId: Number(accountId),
+      accountName: targetAcc?.name ?? 'Cuenta',
+      date: today,
+      expectedBalance: expected,
+      countedBalance: counted,
+      difference,
+      justification: trimmedJustification || (difference === 0 ? 'Arqueo cuadrado sin diferencias' : ''),
+      status,
+      createdAt: new Date().toISOString()
+    };
+
+    setData(prev => {
+      const prevAccounts = prev.accounts ?? FALLBACK_ACCOUNTS;
+      const updatedAccounts = (difference !== 0 && adjustAccountBalance)
+        ? prevAccounts.map(acc => (acc.id === Number(accountId) ? { ...acc, balance: counted } : acc))
+        : prevAccounts;
+
+      const prevRecons = prev.reconciliations ?? FALLBACK_RECONCILIATIONS;
+      const prevTxs = prev.transactions ?? [];
+      const extraTx = (difference !== 0 && adjustAccountBalance)
+        ? [{
+            id: newRecon.id.slice(0, 10),
+            type: difference >= 0 ? 'venta' : 'compra',
+            summary: `Ajuste por arqueo (${targetAcc?.name ?? 'Caja'}): ${trimmedJustification}`,
+            date: today,
+            time: getCurrentTime(),
+            method: difference >= 0 ? 'Ajuste +' : 'Ajuste -',
+            amount: difference
+          }]
+        : [];
+
+      return {
+        ...prev,
+        accounts: updatedAccounts,
+        reconciliations: [newRecon, ...prevRecons],
+        transactions: [...extraTx, ...prevTxs]
+      };
+    });
+
+    return newRecon;
+  }, [accounts, queryClient]);
+
+  // ---------- Transferencias entre Cuentas (RF-101) ----------
+  const transferBetweenAccounts = useCallback(async ({
+    fromAccountId,
+    toAccountId,
+    amount,
+    concept
+  }) => {
+    const fromAccount = accounts.find(a => a.id === Number(fromAccountId));
+    const toAccount = accounts.find(a => a.id === Number(toAccountId));
+
+    if (USE_SUPABASE) {
+      const res = await createAccountTransferDb({
+        fromAccount,
+        toAccount,
+        amount,
+        concept
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+        queryClient.invalidateQueries({ queryKey: ['moneyMovements'] })
+      ]);
+      return res;
+    }
+
+    // Modo local (localStorage)
+    const transferAmount = Number(amount);
+    if (!fromAccount || !toAccount || fromAccount.id === toAccount.id) {
+      throw new Error('Selecciona una cuenta de origen y una cuenta de destino diferentes');
+    }
+    if (Number.isNaN(transferAmount) || transferAmount <= 0) {
+      throw new Error('El monto a transferir debe ser mayor a cero');
+    }
+    if (Number(fromAccount.balance) < transferAmount) {
+      throw new Error(`Saldo insuficiente en ${fromAccount.name}`);
+    }
+
+    const refCode = `TRF-${Date.now().toString().slice(-6)}`;
+    const today = getTodayString();
+    const cleanConcept = (concept ?? '').trim() || `Traslado de ${fromAccount.name} a ${toAccount.name}`;
+
+    setData(prev => {
+      const prevAccounts = prev.accounts ?? FALLBACK_ACCOUNTS;
+      const updatedAccounts = prevAccounts.map(acc => {
+        if (acc.id === fromAccount.id) return { ...acc, balance: Number(acc.balance) - transferAmount };
+        if (acc.id === toAccount.id) return { ...acc, balance: Number(acc.balance) + transferAmount };
+        return acc;
+      });
+      const newTx = {
+        id: refCode,
+        type: 'venta',
+        summary: cleanConcept,
+        date: today,
+        time: getCurrentTime(),
+        method: 'Traslado',
+        amount: transferAmount
+      };
+      return {
+        ...prev,
+        accounts: updatedAccounts,
+        transactions: [newTx, ...(prev.transactions ?? [])]
+      };
+    });
+
+    return { referenceId: refCode };
+  }, [accounts, queryClient]);
+
   const resetDemoData = useCallback(() => {
     setData(freshLocalData());
   }, []);
@@ -489,6 +678,8 @@ export function AppDataProvider({ children }) {
     addSale,
     addProduct,
     updateProduct,
+    addReconciliation,
+    transferBetweenAccounts,
     resetDemoData
   };
 

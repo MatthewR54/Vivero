@@ -187,6 +187,14 @@
   color: var(--green-primary);
 }
 
+.recon-danger {
+  color: var(--danger);
+}
+
+.recon-warning {
+  color: #b45309;
+}
+
 .recon-row {
   display: flex;
   justify-content: space-between;
@@ -198,6 +206,14 @@
 .recon-val {
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.recon-card-actions {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  justify-content: flex-end;
 }
 
 .green-text {
@@ -224,6 +240,105 @@
   height: 1px;
   background: var(--border);
   margin: 8px 0;
+}
+
+/* Modal de Arqueo y Transferencia */
+.recon-modal {
+  max-width: 540px;
+}
+
+.recon-modal-summary {
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: var(--space-base);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.recon-summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.recon-summary-value {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.recon-summary-diff {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.recon-summary-diff.diff-ok {
+  background: var(--green-soft);
+  color: var(--green-primary);
+}
+
+.recon-summary-diff.diff-ok .recon-summary-value {
+  color: var(--green-primary);
+}
+
+.recon-summary-diff.diff-neg {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.recon-summary-diff.diff-neg .recon-summary-value {
+  color: var(--danger);
+}
+
+.recon-summary-diff.diff-pos {
+  background: var(--warning-soft);
+  color: #b45309;
+}
+
+.recon-summary-diff.diff-pos .recon-summary-value {
+  color: #b45309;
+}
+
+.recon-checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--background-secondary);
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.recon-checkbox-row input[type="checkbox"] {
+  margin-top: 3px;
+}
+
+/* Diferencias en Tabla de Historial */
+.recon-diff-zero {
+  font-weight: 600;
+  color: var(--green-primary);
+}
+
+.recon-diff-neg {
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.recon-diff-pos {
+  font-weight: 700;
+  color: #b45309;
 }
 
 @media (max-width: 767px) {

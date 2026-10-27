@@ -10,16 +10,16 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados" : 42
+    "Completados" : 58
     "En Progreso / Parciales" : 14
-    "Simulados (Play-Pretend / Fijos)" : 3
-    "No Iniciados (Falta Módulo)" : 89
+    "Simulados (Play-Pretend / Fijos)" : 1
+    "No Iniciados (Falta Módulo)" : 75
 ```
 
 ### Principales Simulaciones a Eliminar:
 1. ~~**Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-37).~~ ✅ Productos, ventas, cuentas, movimientos, conciliaciones y lotes se leen de Supabase (ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)). `localStorage` queda solo como modo local sin credenciales.
 2. ~~**Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).~~ ✅ KPIs, alertas de stock, lotes activos y transacciones del Panel ahora se calculan en tiempo real desde la base de datos.
-3. **Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) ya muestra los saldos reales de `accounts`, pero aún falta el modal interactivo para ingresar un nuevo conteo físico de dinero y registrar justificaciones (RF-102 a RF-104).
+3. ~~**Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) muestra "$0.00 Diferencia (Cuadrado)" sin permitir ingresar el conteo físico de dinero real ni registrar justificaciones (RF-102 a RF-104).~~ ✅ Modal interactivo de Arqueo y Conciliación (con cálculo de faltante/sobrante, justificación obligatoria, ajuste automático de cuenta, traslado entre cuentas e historial de conciliaciones) implementado y conectado a Supabase.
 4. ~~**Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.~~ ✅ Los filtros de período en el Panel y en Estadísticas filtran ventas y movimientos reales por fecha.
 5. **Módulos Faltantes:** Proveedores, Compras, Producción Propia de Plantas y Kardex de Inventario aún no tienen pantallas en el frontend (sus tablas ya existen en Supabase).
 
@@ -105,13 +105,13 @@ gantt
 ### 💰 Sprint 4 (Semana 4): Tesorería, Conciliación Real, Dashboard y Despliegue
 > **Objetivo:** Proveer transparencia financiera total, reportes auditables y dejar el sistema operando en producción.
 
-- [ ] **Control de Fondos y Arqueo (RF-93 a RF-104):**
-  - Módulo de cuentas: Efectivo (caja menor), Nequi, Bancolombia.
-  - Pantalla interactiva de **Arqueo y Conciliación**:
+- [x] **Control de Fondos y Arqueo (RF-93 a RF-104):**
+  - ~~Módulo de cuentas: Efectivo (caja menor), Nequi, Bancolombia.~~ ✅ Conectado a la tabla `accounts` con opción de traslado de fondos entre cuentas (`RF-101`).
+  - ~~Pantalla interactiva de **Arqueo y Conciliación**:~~ ✅ Implementada en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) y [`src/services/financeService.js`](src/services/financeService.js):
     - Muestra el saldo teórico esperado calculado por el sistema.
-    - Campo para ingresar el dinero físico contado.
-    - Cálculo visual de diferencias (Faltante / Sobrante).
-    - Campo obligatorio de justificación del descuadre para auditoría.
+    - Campo para ingresar el dinero físico contado o saldo verificado en extracto.
+    - Cálculo visual de diferencias (Cuadrado / Faltante / Sobrante).
+    - Campo obligatorio de justificación del descuadre para auditoría y tabla de historial de conciliaciones (`RF-132`).
 - [x] **Cierre Diario y Métricas Reales (RF-105 a RF-122):**
   - ~~Conectar el Dashboard para que los KPIs reflejen ventas, ingresos y egresos del período en tiempo real.~~ ✅ Conectado en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).
   - ~~Hacer funcionales los botones de filtro temporal (*Hoy, Ayer, 7 días, Este Mes*).~~ ✅ Conectados en Dashboard y Estadísticas.
