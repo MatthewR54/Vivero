@@ -10,18 +10,18 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados" : 19
-    "En Progreso / Parciales" : 18
-    "Simulados (Play-Pretend / Fijos)" : 18
-    "No Iniciados (Falta Módulo)" : 93
+    "Completados" : 42
+    "En Progreso / Parciales" : 14
+    "Simulados (Play-Pretend / Fijos)" : 3
+    "No Iniciados (Falta Módulo)" : 89
 ```
 
 ### Principales Simulaciones a Eliminar:
-1. ~~**Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-37).~~ ✅ Productos y ventas ya se leen y escriben en Supabase (ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)). `localStorage` queda solo como modo local sin credenciales y para los datos de ejemplo del Panel/Estadísticas.
-2. **Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).
-3. **Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) muestra "$0.00 Diferencia (Cuadrado)" sin permitir ingresar el conteo físico de dinero real ni registrar justificaciones (RF-102 a RF-104).
-4. **Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.
-5. **Módulos Faltantes:** Proveedores, Compras, Producción Propia de Plantas y Kardex de Inventario aún no tienen pantallas ni tablas en el backend.
+1. ~~**Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-37).~~ ✅ Productos, ventas, cuentas, movimientos, conciliaciones y lotes se leen de Supabase (ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)). `localStorage` queda solo como modo local sin credenciales.
+2. ~~**Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).~~ ✅ KPIs, alertas de stock, lotes activos y transacciones del Panel ahora se calculan en tiempo real desde la base de datos.
+3. **Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) ya muestra los saldos reales de `accounts`, pero aún falta el modal interactivo para ingresar un nuevo conteo físico de dinero y registrar justificaciones (RF-102 a RF-104).
+4. ~~**Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.~~ ✅ Los filtros de período en el Panel y en Estadísticas filtran ventas y movimientos reales por fecha.
+5. **Módulos Faltantes:** Proveedores, Compras, Producción Propia de Plantas y Kardex de Inventario aún no tienen pantallas en el frontend (sus tablas ya existen en Supabase).
 
 ---
 
@@ -112,16 +112,16 @@ gantt
     - Campo para ingresar el dinero físico contado.
     - Cálculo visual de diferencias (Faltante / Sobrante).
     - Campo obligatorio de justificación del descuadre para auditoría.
-- [ ] **Cierre Diario y Métricas Reales (RF-105 a RF-122):**
-  - Conectar el Dashboard para que los KPIs reflejen ventas, ingresos y egresos del día en tiempo real.
-  - Hacer funcionales los botones de filtro temporal (*Hoy, Ayer, 7 días, Mes actual, Rango personalizado*).
-  - Gráfico dinámico de ingresos vs. egresos con datos reales de la base de datos.
+- [x] **Cierre Diario y Métricas Reales (RF-105 a RF-122):**
+  - ~~Conectar el Dashboard para que los KPIs reflejen ventas, ingresos y egresos del período en tiempo real.~~ ✅ Conectado en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).
+  - ~~Hacer funcionales los botones de filtro temporal (*Hoy, Ayer, 7 días, Este Mes*).~~ ✅ Conectados en Dashboard y Estadísticas.
+  - ~~Gráfico dinámico de ingresos vs. egresos con datos reales de la base de datos.~~ ✅ Conectado en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx).
 - [ ] **Reportes y Exportación (RF-123 a RF-138):**
   - Exportación en CSV de reportes de inventario, compras, conciliaciones y ventas.
 - [ ] **Validación No Funcional & Entrega:**
   - Pruebas de diseño responsive en teléfonos inteligentes y tabletas (RNF-07 a RNF-10).
   - Verificación de copias de seguridad automáticas (RNF-25).
-  - Despliegue final en producción (Frontend en Cloudflare Pages, Backend en Supabase).
+  - ~~Despliegue en producción (Frontend en Cloudflare Pages, Backend en Supabase).~~ ✅ Frontend desplegado en Cloudflare Pages y base de datos activa en Supabase.
   - Capacitación del cliente y entrega formal de los accesos a los servicios (Supabase, Cloudflare Pages).
 
 ---

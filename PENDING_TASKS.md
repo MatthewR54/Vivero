@@ -23,22 +23,22 @@ pie title Distribución de Tareas Inmediatas por Módulo
 
 ---
 
-## 🟢 1. Panel de Inicio (Dashboard): Métricas Dinámicas y Filtros Reales
-*Actualmente, los KPIs y chips de días en [`Dashboard.jsx`](src/pages/Dashboard.jsx) contienen valores numéricos fijos en el código.*
+## 🟢 1. Panel de Inicio (Dashboard): Métricas Dinámicas y Filtros Reales — ✅ Completado
+*Los KPIs, alertas de stock, transacciones y chips de días en [`Dashboard.jsx`](src/pages/Dashboard.jsx) ahora calculan sus valores en tiempo real desde Supabase (`sales`, `products`, `accounts`, `money_movements`, `production_batches`).*
 
-- [ ] **1.1. Conectar los Chips de Filtro Temporal ([RF-148](docs/requisitos.md#L366))**
+- [x] **1.1. Conectar los Chips de Filtro Temporal ([RF-148](docs/requisitos.md#L366))**
   - **Archivos:** [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx), [`src/utils/calculations.js`](src/utils/calculations.js)
   - **Acción:** Filtrar `sales` y `transactions` por rango de fechas según el chip seleccionado (*Hoy*, *Ayer*, *Últimos 7 días*, *Este Mes*).
-  - **Verificación:** Al hacer clic en "Ayer" o "Últimos 7 días", las transacciones mostradas y los totales numéricos cambian en consecuencia.
-- [ ] **1.2. Calcular Unidades Vendidas Reales ([RF-116](docs/requisitos.md#L298), [RF-140](docs/requisitos.md#L350))**
+  - **Verificación:** ✅ Al hacer clic en *Hoy*, *Ayer*, *Últimos 7 días* o *Este Mes*, las transacciones mostradas y los totales numéricos cambian en consecuencia.
+- [x] **1.2. Calcular Unidades Vendidas Reales ([RF-116](docs/requisitos.md#L298), [RF-140](docs/requisitos.md#L350))**
   - **Archivos:** [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx)
   - **Acción:** Reemplazar las constantes `soldUnitsPlants = 116` y `soldUnitsMerch = 26` por una función agregadora que recorra `sale.items` sumando las cantidades según la categoría del producto (`vivero` vs `merchandising`).
-- [ ] **1.3. Calcular Ganancia y Margen Real del Período ([RF-108](docs/requisitos.md#L280), [RF-142](docs/requisitos.md#L354))**
+- [x] **1.3. Calcular Ganancia y Margen Real del Período ([RF-108](docs/requisitos.md#L280), [RF-142](docs/requisitos.md#L354))**
   - **Archivos:** [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx)
-  - **Acción:** Calcular ingresos (`SUM(item.subtotal)`), costo de mercancía vendida (`SUM(item.quantity * product.cost)`) y ganancia real (`ingresos - costos`) para el período filtrado.
-- [ ] **1.4. Alertas de Stock Dinámicas ([RF-32](docs/requisitos.md#L79), [RF-146](docs/requisitos.md#L362))**
-  - **Archivos:** [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx)
-  - **Acción:** Generar las alertas de la tarjeta "Alertas del Sistema" evaluando dinámicamente el array actual de `products` con `getStockStatus(p.stock, p.minStock)`. De esta forma, si se crea un producto nuevo con stock bajo, aparece inmediatamente en la lista.
+  - **Acción:** Calcular ingresos (`SUM(item.subtotal)`), costo de mercancía vendida (`SUM(item.quantity * item.unitCost)`) + egresos y ganancia real (`ingresos - costos`) para el período filtrado.
+- [x] **1.4. Alertas de Stock Dinámicas ([RF-32](docs/requisitos.md#L79), [RF-146](docs/requisitos.md#L362))**
+  - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx)
+  - **Acción:** Generar las alertas de la tarjeta "Alertas del Sistema" evaluando dinámicamente el array actual de `products` con `getStockStatus(p.stock, p.minStock)` y los lotes de `production_batches`. De esta forma, si se crea o vende un producto quedando con stock bajo, aparece inmediatamente en la lista.
 
 ---
 
@@ -57,10 +57,9 @@ pie title Distribución de Tareas Inmediatas por Módulo
 - [ ] **2.4. Historial de Conciliaciones en Estado ([RF-132](docs/requisitos.md#L332))**
   - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx)
   - **Acción:** Añadir array `reconciliations: []` en el contexto y función `addReconciliation()`. Guardar la fecha, hora, saldo esperado, saldo real, diferencia y justificación.
-- [ ] **2.5. Balance y Resumen Financiero Diario ([RF-115 a RF-122](docs/requisitos.md#L295-L310))**
-  - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx)
-  - **Acción:** Mostrar desglose de saldo disponible agrupado por medio: **Efectivo en Caja Menor**, **Bancolombia** y **Nequi**, actualizados según las ventas registradas.
-  - **Avance:** ✅ En Supabase, cada venta ya suma su total a `accounts.current_balance` y registra un `INGRESO_VENTA` en `money_movements`. Falta leer esos saldos y mostrarlos.
+- [x] **2.5. Balance y Resumen Financiero Diario ([RF-115 a RF-122](docs/requisitos.md#L295-L310))**
+  - **Archivos:** [`src/services/financeService.js`](src/services/financeService.js), [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx), [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx)
+  - **Acción:** Mostrar desglose de saldo disponible agrupado por medio: **Efectivo en Caja Menor**, **Bancolombia** y **Nequi**, actualizados según las ventas registradas en `accounts`.
 
 ---
 
@@ -156,9 +155,9 @@ pie title Distribución de Tareas Inmediatas por Módulo
 - [ ] **8.1. Búsqueda de Ventas por Producto y Filtro por Fecha ([RF-72](docs/requisitos.md#L188), [RF-73](docs/requisitos.md#L190), [RF-75](docs/requisitos.md#L194))**
   - **Archivos:** [`src/pages/Sales.jsx`](src/pages/Sales.jsx)
   - **Acción:** Ampliar el buscador actual para que coincida también si el texto digitado coincide con el nombre de algún producto contenido dentro de la venta, y añadir selectores de fecha `Desde` y `Hasta`.
-- [ ] **8.2. Exportar Reportes a CSV en Estadísticas ([RF-138](docs/requisitos.md#L344))**
+- [x] **8.2. Exportar Reportes a CSV en Estadísticas ([RF-138](docs/requisitos.md#L344))**
   - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx), [`src/utils/exportCSV.js`](src/utils/exportCSV.js)
-  - **Acción:** El botón "Exportar Reporte" no hace nada actualmente. Conectarlo con `exportToCSV` para descargar un archivo con el balance consolidado del mes.
+  - **Acción:** Conectar el botón "Exportar Reporte" con `exportToCSV` para descargar un archivo con el balance consolidado del período seleccionado.
 - [ ] **8.3. Validaciones de Negocio Estrictas ([RNF-16](docs/requisitos.md#L409), [RNF-17](docs/requisitos.md#L412))**
   - **Archivos:** [`src/pages/NewProduct.jsx`](src/pages/NewProduct.jsx), [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx)
   - **Acción:** Bloquear precios o costos negativos o iguales a cero, validar formato numérico de teléfono y número de documento del cliente.

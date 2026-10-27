@@ -12,7 +12,7 @@ Este documento establece la propuesta técnica y arquitectónica definitiva para
 | **Cliente de Datos / Cache** | **TanStack Query (React Query v5)** ✅ *Integrado* | Reemplaza la manipulación manual de `localStorage`, gestionando estado del servidor, reintentos, cache en memoria y estados de carga (`isLoading`, `isError`). |
 | **Base de Datos** | **PostgreSQL 16+** ✅ *En uso (Supabase)* | **Relacional con ACID estricto**. Imprescindible para conciliaciones contables, arqueos de caja, trazabilidad de lotes de cultivo y kardex de inventario. Columnas `JSONB` para atributos dinámicos de merchandising. |
 | **Backend & API** | **Supabase BaaS** ✅ *Adoptado* *(alternativa evaluada: Node.js + Express / Fastify con Prisma ORM)* | API REST autogenerada sobre PostgreSQL y lógica transaccional en funciones SQL (RPC), sin servidor propio que mantener. |
-| **Infraestructura & Despliegue** | **Vercel (Frontend) + Supabase / Railway (Backend + DB)** | Niveles de uso gratuitos y de bajo costo ideales para proyectos de labor social; copias de seguridad automatizadas diarias (RNF-25), alta disponibilidad (RNF-14) y cero mantenimiento de servidores. |
+| **Infraestructura & Despliegue** | **Cloudflare Pages (Frontend) + Supabase (Backend + DB)** ✅ *Desplegados* | Niveles de uso 100% gratuitos ideales para proyectos de labor social; alta disponibilidad (RNF-14) y cero mantenimiento de servidores. |
 
 ---
 

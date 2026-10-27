@@ -60,6 +60,44 @@ export function getTodayString() {
 }
 
 /**
+ * Obtiene una fecha desplazada en días respecto a hoy en formato YYYY-MM-DD
+ */
+export function getOffsetDateString(daysOffset) {
+  const d = new Date();
+  d.setDate(d.getDate() + daysOffset);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/**
+ * Verifica si una fecha YYYY-MM-DD pertenece al rango seleccionado en el filtro
+ * Soporta chips del Dashboard ('Hoy', 'Ayer', 'Últimos 7 días', 'Este Mes', 'Todo')
+ * y de Estadísticas ('Día', 'Semana', 'Este Mes', 'Año')
+ */
+export function isDateInPeriod(dateStr, filterName) {
+  if (!dateStr || filterName === 'Todo') return true;
+  const today = getTodayString();
+
+  if (filterName === 'Hoy' || filterName === 'Día') {
+    return dateStr === today;
+  }
+  if (filterName === 'Ayer') {
+    return dateStr === getOffsetDateString(-1);
+  }
+  if (filterName === 'Últimos 7 días' || filterName === 'Semana') {
+    const start = getOffsetDateString(-6);
+    return dateStr >= start && dateStr <= today;
+  }
+  if (filterName === 'Este Mes') {
+    return dateStr.slice(0, 7) === today.slice(0, 7);
+  }
+  if (filterName === 'Año') {
+    return dateStr.slice(0, 4) === today.slice(0, 4);
+  }
+  return true;
+}
+
+/**
  * Obtiene la hora actual formateada HH:MM
  */
 export function getCurrentTime() {

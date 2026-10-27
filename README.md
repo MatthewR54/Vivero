@@ -61,9 +61,9 @@ Actualmente, el repositorio cuenta con un **prototipo funcional** construido en 
 - ✅ **Catálogo y Registro de Productos:** Creación con generación automática de SKU según categoría y edición modal.
 - ✅ **Flujo de Venta Interactivo:** Selección visual de productos, carrito dinámico, validación de stock y emisión de tickets.
 - ✅ **Exportación de Ventas:** Descarga de historial en formato CSV.
-- ✅ **Persistencia Real en PostgreSQL (Supabase):** Inventario, registro de productos, nueva venta e historial de ventas leen y escriben en la base de datos mediante la capa [`src/services/`](src/services/) y TanStack Query. Cada venta es **atómica** (función `process_sale_transaction`): descuenta stock, registra el Kardex y suma el dinero a la cuenta del medio de pago. Detalles en [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md).
-- ⚠️ **Datos de Ejemplo Restantes:** El Panel de Inicio y Estadísticas aún muestran datos semilla de [`src/data/seedData.js`](src/data/seedData.js). Sin credenciales de Supabase, la app funciona en **modo local** (`localStorage`) mediante [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx).
-- 🎯 **Meta Inmediata:** Calcular Panel y Estadísticas desde la base de datos y construir los módulos faltantes (Proveedores, Compras, Kardex, Producción, Tesorería) para la entrega al cliente.
+- ✅ **Persistencia Real en PostgreSQL (Supabase):** Inventario, registro de productos, nueva venta, historial de ventas, Panel de Inicio y Estadísticas leen y escriben en la base de datos mediante la capa [`src/services/`](src/services/) y TanStack Query. Cada venta es **atómica** (función `process_sale_transaction`): descuenta stock, registra el Kardex y suma el dinero a la cuenta del medio de pago. Detalles en [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md).
+- ✅ **Modo Local de Respaldo:** Sin credenciales de Supabase, la app funciona en **modo local** (`localStorage`) mediante [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx) y datos semilla en [`src/data/seedData.js`](src/data/seedData.js).
+- 🎯 **Meta Inmediata:** Construir los módulos faltantes (Arqueo interactivo de caja, Proveedores, Compras, Kardex y Producción Propia) para la entrega al cliente.
 
 Para consultar el seguimiento detallado de cada uno de los 148 requisitos funcionales y 35 no funcionales, revisa [`docs/seguimiento_requisitos.csv`](docs/seguimiento_requisitos.csv).
 
@@ -167,7 +167,7 @@ El proyecto ya opera como solución cliente-servidor sobre Supabase:
 - **Frontend:** React 19, Vite 8, React Router DOM 7, TanStack Query v5, Lucide Icons, CSS Modular con variables nativas.
 - **Backend:** ✅ **Supabase** (API REST autogenerada sobre PostgreSQL + funciones SQL transaccionales vía RPC).
 - **Base de Datos:** ✅ **PostgreSQL** relacional con soporte ACID (evaluación y descarte fundamentado de NoSQL en [`TECHSTACK.md`](TECHSTACK.md)).
-- **Despliegue:** Frontend en Cloudflare Pages; Base de Datos en Supabase (ver [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md)).
+- **Despliegue:** ✅ Frontend desplegado en **Cloudflare Pages**; Base de Datos activa en **Supabase** (ver [`DEPLOYMENT_GUIDE.md`](DEPLOYMENT_GUIDE.md)).
 
 Para revisar la justificación arquitectónica completa y el análisis comparativo de bases de datos, consulta [`TECHSTACK.md`](TECHSTACK.md) y [`ARCHITECTURE.md`](ARCHITECTURE.md).
 

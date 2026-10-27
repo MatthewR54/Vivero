@@ -28,14 +28,13 @@
 ```mermaid
 flowchart TD
     subgraph FrontendHosting ["Alojamiento Web (Frontend SPA)"]
-        CF["Cloudflare Pages / Vercel (Gratis)"]
-        Domain["Dominio Personalizado o .pages.dev / .vercel.app (SSL Gratis)"]
+        CF["Cloudflare Pages (Desplegado - Gratis)"]
+        Domain["Dominio .pages.dev (SSL Gratis)"]
     end
 
     subgraph DataLayer ["Capa de Datos & Backend"]
         SB[("Supabase (PostgreSQL 16)")]
         KeepAlive["GitHub Actions Cron (Keep-Alive Diario)"]
-        Auth["Supabase Auth (JWT / Roles)"]
     end
 
     subgraph AppInternals ["Código Fuente (React 19)"]
@@ -46,8 +45,7 @@ flowchart TD
     CF --> AppInternals
     AppInternals --> TQ
     TQ --> SBC
-    SBC -->|"HTTPS / REST"| SB
-    SBC --> Auth
+    SBC -->|"HTTPS / REST & RPC"| SB
     KeepAlive -.->|"Ping Diario (Previene Pausa)"| SB
 ```
 
@@ -60,7 +58,7 @@ flowchart TD
 | Proveedor | Ancho de Banda Mensual | Límite de Peticiones | Certificado SSL | Riesgo de Cobro Imprevisto | Veredicto para Labor Social |
 | :--- | :---: | :---: | :---: | :---: | :---: |
 | **Vercel (Hobby)** | 100 GB | 1,000,000 ejecuciones | Gratis (Automático) | Medio (Términos comerciales estrictos) | Bueno para prototipos |
-| **Cloudflare Pages** | **ILIMITADO** | **ILIMITADO** | Gratis (Automático) | **CERO (0% riesgo)** | ⭐ **Opción Recomendada** |
+| **Cloudflare Pages** | **ILIMITADO** | **ILIMITADO** | Gratis (Automático) | **CERO (0% riesgo)** | ✅ **En uso (Desplegado)** |
 | **GitHub Pages** | 100 GB | Ilimitado | Gratis | **CERO** | Excelente alternativa |
 
 ---
@@ -90,7 +88,7 @@ flowchart TD
 
 ---
 
-### Opción B: Cloudflare Pages (Solución Definitiva Cero Costo)
+### Opción B: Cloudflare Pages (Solución Definitiva Cero Costo — ✅ Desplegado)
 
 **¿Por qué es superior para este proyecto?** Cloudflare Pages ofrece **ancho de banda ilimitado y peticiones ilimitadas** en su capa gratuita sin requerir tarjeta de crédito.
 
@@ -115,7 +113,7 @@ flowchart TD
 
 ### Guía de Implementación con Supabase
 
-Supabase provee una base de datos relacional PostgreSQL completa con autenticación, API REST automática y copias de seguridad.
+Supabase provee una base de datos relacional PostgreSQL completa con API REST automática y funciones transaccionales.
 
 #### Paso 1: Crear el Proyecto
 1. Ingresa a [supabase.com](https://supabase.com/) y crea una cuenta gratuita.
@@ -172,19 +170,28 @@ on:
 jobs:
   ping-supabase:
     runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.VITE_SUPABASE_URL || vars.SUPABASE_URL || vars.VITE_SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY }}
     steps:
       - name: Ping Supabase REST API
         run: |
-          curl -s -f -X GET "${{ secrets.SUPABASE_URL }}/rest/v1/categories?select=id&limit=1" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" > /dev/null
-          echo "Supabase pinged successfully. Project will not be paused!"
+          URL=$(printf '%s' "$SUPABASE_URL" | tr -d '[:space:]' | sed 's:/*$::')
+          KEY=$(printf '%s' "$SUPABASE_ANON_KEY" | tr -d '[:space:]')
+          RESPONSE_FILE=$(mktemp)
+          HTTP_CODE=$(curl -sS -o "$RESPONSE_FILE" -w "%{http_code}" -X GET "$URL/rest/v1/categories?select=id&limit=1" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY")
+          echo "HTTP status: $HTTP_CODE"
+          cat "$RESPONSE_FILE"
+          [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]
 ```
 
 **Configuración en GitHub:**
-1. Ve a tu repositorio en GitHub → **Settings** → **Secrets and variables** → **Actions**.
-2. Añade `SUPABASE_URL` y `SUPABASE_ANON_KEY`.
-3. ¡Listo! La base de datos permanecerá activa indefinidamente a costo $0.
+1. Asegúrate de haber ejecutado [`supabase/migration_01_conexion_frontend.sql`](supabase/migration_01_conexion_frontend.sql) (o la versión actualizada de [`supabase/schema.sql`](supabase/schema.sql)) en el SQL Editor de Supabase: sin los `GRANT USAGE/SELECT ... TO anon`, PostgREST rechaza la consulta a `categories` con HTTP 401 (`permission denied for table categories`, `curl` exit code 22) aunque las políticas RLS estén abiertas.
+2. Ve a tu repositorio en GitHub → **Settings** → **Secrets and variables** → **Actions**.
+3. Añade `SUPABASE_URL` y `SUPABASE_ANON_KEY` (también se aceptan `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`).
+4. ¡Listo! La base de datos permanecerá activa indefinidamente a costo $0.
 
 ---
 
@@ -392,7 +399,7 @@ Configura exactamente las mismas claves en el panel de control del proveedor (**
 | Servicio | Rol en el Sistema | Costo Mensual |
 | :--- | :--- | :---: |
 | **Cloudflare Pages** | Alojamiento CDN Frontend & SSL | **$0.00** |
-| **Supabase** | Base de Datos PostgreSQL, Auth & API | **$0.00** |
+| **Supabase** | Base de Datos PostgreSQL & API REST/RPC | **$0.00** |
 | **GitHub Actions** | CI/CD y Cron Keep-Alive Diario | **$0.00** |
 | **TanStack Query** | Librería de Estado de Servidor | **$0.00** |
 | **Total Mensual para el Vivero** | — | **$0.00 USD** |

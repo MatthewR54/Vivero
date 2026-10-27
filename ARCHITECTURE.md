@@ -6,15 +6,12 @@ Este documento profundiza en la estructura técnica, distribución por capas y f
 
 ## 🏛️ 1. Visión Arquitectónica General
 
-El sistema se fundamenta en una **arquitectura por capas desacopladas** (Clean Architecture / N-Tier Architecture) para garantizar mantenibilidad, trazabilidad contable y evolución modular conforme a los requisitos no funcionales RNF-30 a RNF-33:
+El sistema se fundamenta en una **arquitectura por capas desacopladas** para garantizar mantenibilidad, trazabilidad contable y evolución modular conforme a los requisitos no funcionales RNF-30 a RNF-33. Dado que la aplicación será operada directamente por la clienta, se prescinde de módulos de autenticación y control de roles:
 
 ```mermaid
 flowchart TD
-    subgraph CapaPresentacion ["1. Capa de Presentación & Perfiles"]
-        U1["👤 Administrador General"]
-        U2["🛒 Personal de Ventas (Caja)"]
-        U3["🌱 Operador de Cultivo & Producción"]
-        U4["🚚 Gestor de Compras & Proveedores"]
+    subgraph CapaPresentacion ["1. Capa de Presentación"]
+        U1["👤 Usuaria (Administración, Ventas, Producción y Compras)"]
     end
 
     subgraph CapaFrontend ["2. Capa de Aplicación Frontend (SPA)"]
@@ -22,33 +19,31 @@ flowchart TD
         Views["Vistas Modulares (Dashboard, Inventario, POS, Finanzas)"]
         State["Gestión de Estado (TanStack Query + Context UI)"]
         ValidationFE["Validación Temprana de Formularios"]
-        Http["Cliente HTTP Interceptor (Token Auth)"]
+        Services["Capa de Servicios (src/services/*)"]
     end
 
-    subgraph CapaBackend ["3. Capa de Lógica de Negocio (Backend API)"]
-        AuthMiddleware["Middleware de Autenticación & RBAC"]
-        Controllers["Controladores REST"]
+    subgraph CapaBackend ["3. Capa de Lógica de Negocio (Supabase / API REST + RPC)"]
+        PostgREST["API REST Autogenerada (PostgREST)"]
         
-        subgraph ModulosNegocio ["Servicios de Dominio"]
-            S_Prod["Servicio de Productos & Kardex"]
-            S_Sale["Servicio de Ventas & Facturación"]
-            S_Plant["Servicio de Producción Biológica"]
-            S_Merch["Servicio de Merchandising Personalizado"]
-            S_Treasury["Servicio de Tesorería & Conciliación"]
-            S_Purchase["Servicio de Compras & Costeo Ponderado"]
+        subgraph ModulosNegocio ["Lógica y Servicios de Dominio"]
+            S_Prod["Productos & Kardex"]
+            S_Sale["Ventas & Facturación (RPC process_sale_transaction)"]
+            S_Plant["Producción Biológica"]
+            S_Merch["Merchandising Personalizado"]
+            S_Treasury["Tesorería & Conciliación"]
+            S_Purchase["Compras & Costeo Ponderado"]
         end
 
-        TxManager["Gestor de Transacciones ACID"]
+        TxManager["Transacciones ACID en PostgreSQL"]
     end
 
     subgraph CapaDatos ["4. Capa de Persistencia & Almacenamiento"]
-        ORM["Prisma ORM / Conexión Nativa Pool"]
-        DB[("PostgreSQL 16 Engine")]
+        DB[("PostgreSQL 16 Engine (Supabase)")]
         Tables["Tablas Relacionales + Índices + JSONB"]
     end
 
-    subgraph ServiciosTransversales ["5. Servicios de Soporte & Respaldo"]
-        BackupService["Respaldos Automáticos Diarios (PITR)"]
+    subgraph ServiciosTransversales ["5. Servicios de Soporte & Exportación"]
+        KeepAlive["GitHub Actions Keep-Alive Diario"]
         ExportService["Generación y Exportación CSV / Reportes"]
     end
 
@@ -56,44 +51,23 @@ flowchart TD
     Router --> Views
     Views --> State
     State --> ValidationFE
-    ValidationFE --> Http
-    Http -->|"REST API (JSON / Bearer Token)"| AuthMiddleware
-    AuthMiddleware --> Controllers
-    Controllers --> ModulosNegocio
+    ValidationFE --> Services
+    Services -->|"HTTPS / @supabase/supabase-js"| PostgREST
+    PostgREST --> ModulosNegocio
     ModulosNegocio --> TxManager
-    TxManager --> ORM
-    ORM --> DB
+    TxManager --> DB
     DB --> Tables
-    DB -.-> BackupService
-    Controllers -.-> ExportService
+    KeepAlive -.->|"Ping Diario"| PostgREST
+    Views -.-> ExportService
 ```
 
 ---
 
-## 👥 2. Perfiles de Usuario y Matriz de Control de Acceso (RBAC)
-
-El acceso a las funcionalidades y rutas se controla mediante roles (RNF-22 y RNF-23):
-
-| Módulo / Función | Administrador | Vendedor / Caja | Operador de Producción |
-| :--- | :---: | :---: | :---: |
-| **Panel de Inicio (Dashboard General)** | Total | Limitado (solo KPIs de turno) | Limitado (solo alertas de cultivo) |
-| **Punto de Venta (Nueva Venta, Carrito, Cobro)** | Total | Total | Sin acceso |
-| **Historial de Ventas & Reimpresión de Tickets** | Total | Total | Sin acceso |
-| **Gestión de Inventario (Edición de Precios/Costos)** | Total | Solo lectura | Solo lectura |
-| **Ajustes de Inventario (Entradas/Salidas manuales)** | Total | Sin acceso | Con aprobación |
-| **Compras & Gestión de Proveedores** | Total | Sin acceso | Sin acceso |
-| **Producción Propia (Cultivo, Insumos, Cosecha)** | Total | Sin acceso | Total |
-| **Merchandising Personalizado (Cotización)** | Total | Total | Sin acceso |
-| **Tesorería, Arqueo de Caja y Conciliación Bancaria** | Total | Solo arqueo de caja turno | Sin acceso |
-| **Métricas Financieras, Balance y Reportes** | Total | Sin acceso | Sin acceso |
-
----
-
-## 🔄 3. Flujos de Información y Diagramas de Secuencia Transaccionales
+## 🔄 2. Flujos de Información y Diagramas de Secuencia Transaccionales
 
 Conforme a la sección 2.10 de [`docs/disenio_tecnico_inicial.docx`](docs/disenio_tecnico_inicial.docx), los siguientes diagramas de secuencia especifican la interacción exacta entre capas para los procesos neurálgicos del negocio:
 
-### 3.1. Flujo 1: Registro de una Venta en Punto de Venta (POS)
+### 2.1. Flujo 1: Registro de una Venta en Punto de Venta (POS)
 Garantiza que la venta, el descuento de stock, el movimiento en el kardex y la entrada de dinero en la cuenta de pago ocurran de forma atómica:
 
 ```mermaid
@@ -131,7 +105,7 @@ sequenceDiagram
 
 ---
 
-### 3.2. Flujo 2: Ciclo de Vida de Producción Propia de Plantas
+### 2.2. Flujo 2: Ciclo de Vida de Producción Propia de Plantas
 Controla los tiempos biológicos no uniformes y la acumulación de costos hasta la incorporación al inventario comercial:
 
 ```mermaid
@@ -172,7 +146,7 @@ sequenceDiagram
 
 ---
 
-### 3.3. Flujo 3: Registro de Compra a Proveedor y Costeo Ponderado
+### 2.3. Flujo 3: Registro de Compra a Proveedor y Costeo Ponderado
 Maneja el abastecimiento y la actualización automática del costo promedio:
 
 ```mermaid
@@ -197,7 +171,7 @@ sequenceDiagram
 
 ---
 
-### 3.4. Flujo 4: Arqueo y Conciliación de Fondos (Efectivo vs. Cuentas)
+### 2.4. Flujo 4: Arqueo y Conciliación de Fondos (Efectivo vs. Cuentas)
 Responde a la pregunta clave del cliente: *¿Por qué el sistema dice que debería haber $X, pero en la realidad hay $Y?*:
 
 ```mermaid
@@ -227,36 +201,36 @@ sequenceDiagram
 
 ---
 
-## 🔒 4. Integridad de la Información y Reglas Anti-Fraude
+## 🔒 3. Integridad de la Información y Reglas Operativas
 
-Para cumplir estrictamente con los RNF-16 a RNF-24:
+Para cumplir estrictamente con los RNF-16 a RNF-21:
 
 1. **Inmutabilidad de Transacciones Cerradas:** Una venta o compra confirmada **nunca se elimina físicamente** de la base de datos (`NO HARD DELETE`). Si se requiere una anulación, se genera un registro de anulación que revierte el inventario y genera un movimiento compensatorio en tesorería.
 2. **Restricción de Integridad Referencial:** Ningún producto o proveedor con transacciones históricas puede ser eliminado (`ON DELETE RESTRICT`). Solo se permite marcarlo como `active = false` para ocultarlo en nuevos formularios.
-3. **Bloqueo Pesimista en Checkout:** Para evitar que dos clientes compren simultáneamente la última unidad de una orquídea en stock, la transacción bloquea la fila del producto (`SELECT ... FOR UPDATE`) hasta confirmar el decremento.
-4. **Idempotencia en APIs de Cobro:** Cada petición de venta enviada desde el frontend lleva un identificador único idempotente para evitar duplicar cargos si el usuario presiona dos veces el botón de pago bajo mala conectividad.
+3. **Bloqueo Pesimista en Checkout:** Para evitar condiciones de carrera en el inventario, la transacción bloquea la fila del producto (`SELECT ... FOR UPDATE`) hasta confirmar el decremento.
+4. **Control de Duplicados en Cobro:** El botón de confirmación se bloquea durante el envío y la base de datos asigna el consecutivo único (`VTA-XXXX`) mediante secuencia transaccional.
 
 ---
 
-## 🌐 5. Estrategia de Despliegue e Infraestructura
+## 🌐 4. Estrategia de Despliegue e Infraestructura (En Producción)
 
 ```mermaid
 flowchart LR
     Dev["Desarrollador / Git Push"] --> GitHub["GitHub Repo (main)"]
     
-    subgraph CI_CD ["CI / CD Automatizado"]
-        GitHub --> ActionLint["Oxlint & Build Test"]
+    subgraph CI_CD ["Automatización (GitHub Actions + Cloudflare)"]
+        GitHub --> CFBuild["Cloudflare Pages Build (Vite)"]
+        Cron["GitHub Actions Cron Diario"]
     end
 
-    subgraph Produccion ["Entorno de Producción"]
-        ActionLint -->|"Deploy Frontend"| Vercel["Vercel CDN Edge (React SPA)"]
-        ActionLint -->|"Deploy Backend"| Railway["Railway / Supabase (Node API)"]
-        Railway --> ManagedPG[("PostgreSQL Gestionado")]
-        ManagedPG --> S3Snapshots[("Respaldos Diarios Automáticos")]
+    subgraph Produccion ["Entorno de Producción Activo"]
+        CFBuild -->|"Deploy Frontend"| CFPages["Cloudflare Pages CDN (React SPA)"]
+        Supabase[("Supabase (PostgreSQL 16 + API REST/RPC)")]
+        Cron -.->|"Keep-Alive Ping"| Supabase
     end
 
-    Users["Usuarios (Desktop / Tablet / Móvil)"] -->|"HTTPS"| Vercel
-    Vercel -->|"API Calls (CORS)"| Railway
+    Users["Usuaria (Desktop / Tablet / Móvil)"] -->|"HTTPS"| CFPages
+    CFPages -->|"HTTPS (REST / RPC)"| Supabase
 ```
 
-Esta arquitectura garantiza el cumplimiento de los 38 requisitos no funcionales, permitiendo a la iniciativa social contar con una plataforma robusta, segura y auditable.
+Esta arquitectura garantiza el cumplimiento de los 35 requisitos no funcionales, permitiendo a la iniciativa social contar con una plataforma robusta y auditable a costo $0.00.
