@@ -9,6 +9,7 @@ const navLinks = [
   { to: '/ventas', label: 'Ventas' },
   { to: '/inventario', label: 'Manejar inventario' },
   { to: '/proveedores', label: 'Proveedores' },
+  { to: '/compras', label: 'Compras' },
   { to: '/estadistico', label: 'Estadístico' }
 ];
 

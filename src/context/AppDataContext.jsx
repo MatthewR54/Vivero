@@ -5,7 +5,15 @@ import {
   seedAlerts, seedStatistics, seedNextSaleId, seedNextProductId,
   seedSuppliers, seedPurchases
 } from '../data/seedData';
-import { getStockStatus, generateSaleId, generateSKU, getTodayString, getCurrentTime, summarizeItems } from '../utils/calculations';
+import {
+  getStockStatus,
+  generateSaleId,
+  generateSKU,
+  getTodayString,
+  getCurrentTime,
+  summarizeItems,
+  calculateWeightedAverageCost
+} from '../utils/calculations';
 import { isSupabaseConfigured } from '../services/supabaseClient';
 import {
   fetchProducts,
@@ -29,7 +37,8 @@ import {
   fetchSuppliers,
   createSupplier as createSupplierDb,
   updateSupplierInDb,
-  fetchPurchases
+  fetchPurchases,
+  createPurchase as createPurchaseDb
 } from '../services/suppliersService';
 
 // ============================================================
@@ -657,6 +666,157 @@ export function AppDataProvider({ children }) {
     }));
   }, [queryClient]);
 
+  // ---------- Compras a Proveedores (RF-15 a RF-22, RF-24, RF-33, RF-96) ----------
+  const addPurchase = useCallback(async ({
+    supplierId,
+    invoiceNumber,
+    purchaseDate,
+    accountId,
+    notes,
+    items
+  }) => {
+    const targetSupplier = suppliers.find(s => Number(s.id) === Number(supplierId));
+    const supplierName = targetSupplier?.name || 'Proveedor';
+    const productsById = new Map(products.map(p => [p.id, p]));
+    const accountsById = new Map(accounts.map(a => [Number(a.id), a]));
+
+    if (USE_SUPABASE) {
+      const created = await createPurchaseDb({
+        supplierId,
+        supplierName,
+        invoiceNumber,
+        purchaseDate,
+        accountId,
+        notes,
+        items,
+        productsById,
+        accountsById
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['purchases'] }),
+        queryClient.invalidateQueries({ queryKey: ['products'] }),
+        queryClient.invalidateQueries({ queryKey: ['inventoryMovements'] }),
+        queryClient.invalidateQueries({ queryKey: ['accounts'] }),
+        queryClient.invalidateQueries({ queryKey: ['moneyMovements'] })
+      ]);
+      return created;
+    }
+
+    // Modo local (localStorage)
+    if (!supplierId) throw new Error('Selecciona el proveedor de la compra');
+    if (!Array.isArray(items) || items.length === 0) {
+      throw new Error('La compra debe incluir al menos un producto');
+    }
+
+    const normalizedItems = items.map((item, idx) => {
+      const prod = productsById.get(item.productId);
+      const qty = Math.floor(Number(item.quantity));
+      const unitCost = Number(item.unitCost);
+      if (!item.productId || !qty || qty <= 0) {
+        throw new Error('Todas las líneas deben tener una cantidad válida mayor a 0');
+      }
+      if (Number.isNaN(unitCost) || unitCost < 0) {
+        throw new Error('El costo unitario de compra no puede ser negativo');
+      }
+      return {
+        id: `pur-item-${Date.now()}-${idx}`,
+        productId: item.productId,
+        productName: prod?.name ?? item.productId,
+        sku: prod?.sku ?? item.productId,
+        quantity: qty,
+        unitCost,
+        subtotal: qty * unitCost
+      };
+    });
+
+    const totalCost = normalizedItems.reduce((sum, it) => sum + it.subtotal, 0);
+    const dateStr = purchaseDate || getTodayString();
+    const nowTime = getCurrentTime();
+    const cleanInvoice = invoiceNumber?.trim() || `CMP-${Date.now().toString().slice(-6)}`;
+    const targetAcc = accountId ? accountsById.get(Number(accountId)) : null;
+
+    const newPurchase = {
+      id: `pur-${Date.now()}`,
+      supplierId: Number(supplierId),
+      supplierName,
+      invoiceNumber: cleanInvoice,
+      date: dateStr,
+      totalCost,
+      accountId: accountId ? Number(accountId) : null,
+      accountName: targetAcc?.name ?? 'Caja / Banco',
+      notes: notes?.trim() || '',
+      items: normalizedItems,
+      createdAt: new Date().toISOString()
+    };
+
+    setData(prev => {
+      const newMovs = [];
+      const updatedProducts = prev.products.map(p => {
+        const line = normalizedItems.find(it => it.productId === p.id);
+        if (!line) return p;
+        const prevStock = Number(p.stock) || 0;
+        const resStock = prevStock + line.quantity;
+        const newAvgCost = calculateWeightedAverageCost(prevStock, p.cost, line.quantity, line.unitCost);
+        newMovs.push({
+          id: `mov-pur-${Date.now()}-${p.id}`,
+          productId: p.id,
+          productName: p.name,
+          productSku: p.sku,
+          movementType: 'ENTRADA_COMPRA',
+          quantity: line.quantity,
+          previousStock: prevStock,
+          resultingStock: resStock,
+          reason: `Compra a ${supplierName} (Factura ${cleanInvoice}) a $${line.unitCost.toLocaleString('es-CO')}/ud`,
+          referenceId: cleanInvoice,
+          date: dateStr,
+          time: nowTime,
+          createdAt: new Date().toISOString()
+        });
+        return {
+          ...p,
+          stock: resStock,
+          cost: newAvgCost,
+          supplierId: p.supplierId || Number(supplierId)
+        };
+      });
+
+      const prevAccounts = prev.accounts ?? FALLBACK_ACCOUNTS;
+      const updatedAccounts = accountId
+        ? prevAccounts.map(acc =>
+            Number(acc.id) === Number(accountId)
+              ? { ...acc, balance: Number(acc.balance) - totalCost }
+              : acc
+          )
+        : prevAccounts;
+
+      const newTx = {
+        id: cleanInvoice,
+        type: 'compra',
+        summary: `Compra a ${supplierName} (${normalizedItems.map(i => `${i.quantity}× ${i.productName}`).join(', ')})`,
+        date: dateStr,
+        time: nowTime,
+        method: targetAcc?.name || 'Egreso',
+        amount: -totalCost
+      };
+
+      const newStats = { ...prev.statistics };
+      newStats.totalEgresos += totalCost;
+      newStats.gananciaNeta = newStats.totalIngresos - newStats.totalEgresos;
+
+      return {
+        ...prev,
+        products: updatedProducts,
+        purchases: [newPurchase, ...(prev.purchases ?? seedPurchases)],
+        inventoryMovements: [...newMovs, ...(prev.inventoryMovements ?? FALLBACK_INVENTORY_MOVEMENTS)],
+        accounts: updatedAccounts,
+        transactions: [newTx, ...(prev.transactions ?? [])],
+        statistics: newStats
+      };
+    });
+
+    return newPurchase;
+  }, [suppliers, products, accounts, queryClient]);
+
   // ---------- Ajuste Manual de Inventario y Kardex (RF-26 a RF-30) ----------
   const adjustStock = useCallback(async ({
     productId,
@@ -922,6 +1082,7 @@ export function AppDataProvider({ children }) {
     updateProduct,
     addSupplier,
     updateSupplier,
+    addPurchase,
     adjustStock,
     addReconciliation,
     transferBetweenAccounts,

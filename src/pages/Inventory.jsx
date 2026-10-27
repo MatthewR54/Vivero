@@ -12,6 +12,7 @@ import {
 } from '../utils/calculations';
 import {
   Plus,
+  ShoppingCart,
   Search,
   Pencil,
   X,
@@ -344,6 +345,9 @@ export default function Inventory() {
           </button>
           <button className="btn btn-outline" onClick={() => openKardexModal('all')}>
             <History size={16} /> Ver Kardex ({inventoryMovements?.length || 0})
+          </button>
+          <button className="btn btn-outline" onClick={() => navigate('/compras/nueva')}>
+            <ShoppingCart size={16} /> Registrar Compra
           </button>
           <button className="btn btn-primary" onClick={() => navigate('/inventario/nuevo')}>
             <Plus size={16} /> Registrar Producto

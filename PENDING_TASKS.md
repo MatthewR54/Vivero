@@ -99,20 +99,21 @@ pie title Distribución de Tareas Inmediatas por Módulo
 
 ---
 
-## 🔵 5. Módulo de Compras a Proveedores
-*El botón "Registrar Compra" existe en Inventario y Dashboard pero no ejecuta ninguna acción ([RF-15 a RF-22](docs/requisitos.md#L41-L58)).*
+## 🔵 5. Módulo de Compras a Proveedores — ✅ Completado
+*El registro de facturas de compra, recálculo automático de costo promedio ponderado, entrada en Kardex, descuento de cuentas e historial por período ([RF-15 a RF-22](docs/requisitos.md#L41-L58), [RF-33](docs/requisitos.md#L81), [RF-96](docs/requisitos.md#L252), [RF-127](docs/requisitos.md#L322)) están implementados y conectados con Supabase (`purchases`, `purchase_items`, `products`, `inventory_movements`, `accounts`, `money_movements`).*
 
-- [ ] **5.1. Vista de Registro de Compra (`/compras/nueva`) ([RF-15 a RF-19](docs/requisitos.md#L43-L51))**
-  - **Archivos:** Crear `src/pages/NewPurchase.jsx` y `src/pages/NewPurchase.css`.
-  - **Acción:** Formulario para registrar proveedor, número de factura, fecha, selector de productos, cantidades y costo unitario de compra. Cálculo automático del costo total.
-- [ ] **5.2. Actualización Automática de Stock por Compra ([RF-20](docs/requisitos.md#L53))**
-  - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx)
-  - **Acción:** Función `addPurchase()` que incremente el stock de los productos comprados y descuente el dinero de la cuenta de pago seleccionada.
-- [ ] **5.3. Recálculo de Costo Promedio Ponderado ([RF-33](docs/requisitos.md#L81))**
-  - **Archivos:** [`src/utils/calculations.js`](src/utils/calculations.js)
-  - **Acción:** Implementar fórmula: `((StockActual * CostoActual) + (CantComprada * CostoCompra)) / (StockTotal)`.
-- [ ] **5.4. Historial de Compras ([RF-21](docs/requisitos.md#L55), [RF-22](docs/requisitos.md#L57))**
-  - **Archivos:** Crear `src/pages/Purchases.jsx` con tabla de facturas de compra y filtro por proveedor y período.
+- [x] **5.1. Vista de Registro de Compra (`/compras/nueva`) ([RF-15 a RF-19](docs/requisitos.md#L43-L51))**
+  - **Archivos:** [`src/pages/NewPurchase.jsx`](src/pages/NewPurchase.jsx), [`src/pages/NewPurchase.css`](src/pages/NewPurchase.css)
+  - **Acción:** Formulario para registrar proveedor, número de factura, fecha, cuenta de pago, selector de productos (con carga rápida de productos habituales del proveedor), cantidades, costo unitario y cálculo automático del costo total. Conectados los botones "Registrar Compra" en Dashboard, Inventario y Proveedores.
+- [x] **5.2. Actualización Automática de Stock, Kardex y Cuentas por Compra ([RF-20](docs/requisitos.md#L53), [RF-24](docs/requisitos.md#L63), [RF-96](docs/requisitos.md#L252))**
+  - **Archivos:** [`src/services/suppliersService.js`](src/services/suppliersService.js), [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx)
+  - **Acción:** Función `addPurchase()` / `createPurchase()` que incrementa el stock de los productos comprados, registra el movimiento `ENTRADA_COMPRA` en `inventory_movements`, descuenta el dinero de la cuenta seleccionada y registra `EGRESO_COMPRA` en `money_movements`.
+- [x] **5.3. Recálculo de Costo Promedio Ponderado ([RF-33](docs/requisitos.md#L81))**
+  - **Archivos:** [`src/utils/calculations.js`](src/utils/calculations.js), [`src/pages/NewPurchase.jsx`](src/pages/NewPurchase.jsx), [`src/services/suppliersService.js`](src/services/suppliersService.js)
+  - **Acción:** Función `calculateWeightedAverageCost` (`((StockActual * CostoActual) + (CantComprada * CostoCompra)) / StockTotal`) previsualizada en tiempo real en `NewPurchase.jsx` y persistida en `products.base_cost`.
+- [x] **5.4. Historial y Reporte de Compras (`/compras`) ([RF-21](docs/requisitos.md#L55), [RF-22](docs/requisitos.md#L57), [RF-127](docs/requisitos.md#L322))**
+  - **Archivos:** [`src/pages/Purchases.jsx`](src/pages/Purchases.jsx), [`src/pages/Purchases.css`](src/pages/Purchases.css)
+  - **Acción:** Tabla de facturas de compra con KPIs, filtro por proveedor, filtro por período, modal de detalle de factura y exportación de reporte a CSV.
 
 ---
 

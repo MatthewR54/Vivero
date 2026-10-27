@@ -9,6 +9,21 @@ export function calculateMargin(price, cost) {
 }
 
 /**
+ * RF-33: Calcula el costo promedio ponderado tras una compra
+ * Fórmula: ((StockActual * CostoActual) + (CantComprada * CostoCompra)) / StockTotal
+ */
+export function calculateWeightedAverageCost(currentStock, currentCost, purchasedQty, purchaseUnitCost) {
+  const curStock = Math.max(0, Number(currentStock) || 0);
+  const curCost = Math.max(0, Number(currentCost) || 0);
+  const addQty = Math.max(0, Number(purchasedQty) || 0);
+  const addCost = Math.max(0, Number(purchaseUnitCost) || 0);
+  const totalStock = curStock + addQty;
+  if (totalStock <= 0) return Math.round(addCost || curCost);
+  if (curStock === 0) return Math.round(addCost);
+  return Math.round(((curStock * curCost) + (addQty * addCost)) / totalStock);
+}
+
+/**
  * Determina el estado de stock de un producto
  */
 export function getStockStatus(stock, minStock) {

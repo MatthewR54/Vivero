@@ -1,0 +1,205 @@
+/* ===== NEW PURCHASE PAGE (RF-15 a RF-20, RF-33) ===== */
+.npur-back {
+  margin-bottom: 8px;
+}
+
+.npur-layout {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: var(--space-md);
+  align-items: start;
+}
+
+.npur-section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 12px;
+}
+
+.npur-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.npur-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+.npur-account-preview {
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+}
+
+.npur-account-preview.warn {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.npur-acc-row {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-secondary);
+}
+
+.npur-acc-row.total {
+  border-top: 1px dashed var(--border);
+  padding-top: 6px;
+  margin-top: 2px;
+  color: var(--text-primary);
+  font-size: 13px;
+}
+
+.npur-items-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
+.npur-add-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.npur-product-select {
+  flex: 1;
+}
+
+.npur-table-wrapper {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  margin-bottom: 16px;
+}
+
+.npur-prod-name {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.npur-prod-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.npur-stock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--green-soft);
+  color: var(--green-primary);
+  font-size: 12px;
+}
+
+.npur-arrow {
+  opacity: 0.7;
+}
+
+.npur-table-input {
+  height: 34px;
+  font-weight: 600;
+}
+
+.npur-avg-cost-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.npur-avg-cost-box .cost-up {
+  color: #b45309;
+  font-size: 11px;
+}
+
+.npur-avg-cost-box .cost-down {
+  color: var(--green-primary);
+  font-size: 11px;
+}
+
+.npur-subtotal-cell {
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.npur-summary-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.npur-summary-metrics {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.npur-metric {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.npur-metric strong {
+  color: var(--text-primary);
+}
+
+.npur-grand-total {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.npur-grand-total strong {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--green-primary);
+}
+
+@media (max-width: 960px) {
+  .npur-layout {
+    grid-template-columns: 1fr;
+  }
+  .npur-add-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

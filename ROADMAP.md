@@ -10,10 +10,10 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados" : 71
-    "En Progreso / Parciales" : 12
+    "Completados" : 84
+    "En Progreso / Parciales" : 10
     "Simulados (Play-Pretend / Fijos)" : 1
-    "No Iniciados (Falta Módulo)" : 64
+    "No Iniciados (Falta Módulo)" : 53
 ```
 
 ### Principales Simulaciones a Eliminar:
@@ -36,7 +36,7 @@ gantt
     Migración Productos/Ventas a API       :done, s1_3, after s1_1, 3d
     section Sprint 2: Core ERP & Kardex
     Módulo de Proveedores                  :done, s2_1, 2026-10-22, 2d
-    Módulo de Compras & Costo Promedio     :s2_2, after s2_1, 3d
+    Módulo de Compras & Costo Promedio     :done, s2_2, after s2_1, 3d
     Kardex de Inventario & Ajustes         :done, s2_3, after s2_2, 3d
     section Sprint 3: Procesos Especializados
     Producción Propia de Plantas           :s3_1, 2026-10-29, 4d
@@ -72,10 +72,10 @@ gantt
 - [x] **Módulo de Proveedores (RF-10 a RF-14):**
   - ~~Crear vista `/proveedores` con listado, buscador y formulario de alta/edición.~~ ✅ Implementada en [`src/pages/Suppliers.jsx`](src/pages/Suppliers.jsx) y conectada a Supabase vía [`src/services/suppliersService.js`](src/services/suppliersService.js).
   - ~~Asociar productos del catálogo con sus respectivos proveedores habituales.~~ ✅ Vinculación disponible desde `/proveedores`, `/inventario/nuevo` y el modal de edición en `/inventario`, además de consulta del historial de compras por proveedor (`RF-14`).
-- [ ] **Módulo de Compras (RF-15 a RF-22):**
-  - Implementar vista `/compras/nueva` para registrar facturas de proveedores.
-  - Actualización automática de existencias al ingresar una compra.
-  - Recálculo automático del **costo promedio ponderado** (RF-33).
+- [x] **Módulo de Compras (RF-15 a RF-22):**
+  - ~~Implementar vista `/compras/nueva` para registrar facturas de proveedores.~~ ✅ Implementada en [`src/pages/NewPurchase.jsx`](src/pages/NewPurchase.jsx) e historial en [`src/pages/Purchases.jsx`](src/pages/Purchases.jsx).
+  - ~~Actualización automática de existencias al ingresar una compra.~~ ✅ Incrementa `products.current_stock`, registra `ENTRADA_COMPRA` en Kardex y descuenta la cuenta de pago (`EGRESO_COMPRA`).
+  - ~~Recálculo automático del **costo promedio ponderado** (RF-33).~~ ✅ Calculado con `calculateWeightedAverageCost` en [`src/utils/calculations.js`](src/utils/calculations.js) y persistido en `products.base_cost`.
 - [x] **Kardex y Movimientos de Inventario (RF-24 a RF-30):**
   - ~~La tabla `inventory_movements` registra automáticamente el stock inicial (`INICIAL`) y las salidas por venta (`SALIDA_VENTA`).~~ ✅ Conectada al frontend vía [`src/services/inventoryService.js`](src/services/inventoryService.js).
   - ~~Pantalla o pestaña de *Historial de Movimientos* por producto.~~ ✅ Modal de Kardex en [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx) con filtros por producto (`RF-29`), período (`RF-30`), sentido (entradas/salidas) y exportación CSV.

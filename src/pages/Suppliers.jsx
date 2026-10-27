@@ -750,6 +750,16 @@ export default function Suppliers() {
               <button
                 className="btn btn-outline"
                 onClick={() => {
+                  const sid = detailSupplier.id;
+                  setDetailSupplierId(null);
+                  navigate(`/compras/nueva?supplierId=${sid}`);
+                }}
+              >
+                <ShoppingBag size={14} /> Registrar Compra a este Proveedor
+              </button>
+              <button
+                className="btn btn-outline"
+                onClick={() => {
                   setDetailSupplierId(null);
                   navigate('/inventario/nuevo');
                 }}

@@ -274,10 +274,10 @@ export default function Dashboard() {
                 <button className="btn btn-primary" onClick={() => navigate('/ventas/nueva')}>
                   <Plus size={16} /> Nueva Venta
                 </button>
-                <button className="btn btn-outline" onClick={() => navigate('/inventario/nuevo')}>
-                  <ShoppingCart size={16} /> Nuevo Producto
+                <button className="btn btn-outline" onClick={() => navigate('/compras/nueva')}>
+                  <ShoppingCart size={16} /> Registrar Compra
                 </button>
-                <button className="btn btn-outline" onClick={() => navigate('/estadisticas')}>
+                <button className="btn btn-outline" onClick={() => navigate('/estadistico')}>
                   <WalletCards size={16} /> Ver Conciliación
                 </button>
               </div>
