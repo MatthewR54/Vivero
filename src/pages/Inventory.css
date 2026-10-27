@@ -32,8 +32,39 @@
   font-size: 12px;
 }
 
+.inv-product-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .inv-product-name {
   font-weight: 600;
+}
+
+.inv-subtext {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.inv-inactive-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.row-inactive {
+  opacity: 0.72;
+  background: rgba(148, 163, 184, 0.05);
 }
 
 .inv-stock {
@@ -47,6 +78,12 @@
 .inv-price {
   color: var(--green-primary);
   font-weight: 600;
+}
+
+.inv-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .inv-footer {
@@ -74,7 +111,7 @@
 
 /* ===== EDIT MODAL ===== */
 .edit-product-modal {
-  max-width: 720px;
+  max-width: 760px;
 }
 
 .edit-form-row {
@@ -82,6 +119,10 @@
   grid-template-columns: repeat(3, 1fr);
   gap: var(--space-md);
   margin-bottom: var(--space-base);
+}
+
+.edit-form-row-2 {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .edit-stock-section {
@@ -95,21 +136,45 @@
   margin-bottom: 0;
 }
 
+.edit-stock-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .text-danger {
   color: var(--danger) !important;
 }
 
-.edit-visibility {
+.text-success {
+  color: var(--green-primary) !important;
+}
+
+.edit-visibility-toggle {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
+  width: 100%;
   height: var(--input-height);
   padding: 0 12px;
-  border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  background: var(--surface);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.edit-visibility-toggle.active {
+  background: var(--green-soft);
+  color: var(--green-primary);
+  border: 1px solid var(--green-accent);
+}
+
+.edit-visibility-toggle.inactive {
+  background: var(--surface);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
 }
 
 .edit-price-input {
@@ -129,11 +194,216 @@
   border: 1px solid var(--green-accent);
 }
 
+/* ===== MANUAL STOCK ADJUSTMENT MODAL ===== */
+.adjust-stock-modal {
+  max-width: 600px;
+}
+
+.adjust-direction-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.adjust-dir-btn {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--text-secondary);
+}
+
+.adjust-dir-btn:hover {
+  border-color: var(--text-muted);
+}
+
+.adjust-dir-btn.entry.active {
+  background: var(--green-soft);
+  border-color: var(--green-primary);
+  color: var(--green-primary);
+}
+
+.adjust-dir-btn.exit.active {
+  background: #fef2f2;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.adjust-dir-title {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.adjust-dir-desc {
+  font-size: 11px;
+  opacity: 0.85;
+}
+
+.adjust-preview-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px 18px;
+}
+
+.adjust-preview-box.invalid {
+  border-color: var(--danger);
+  background: #fef2f2;
+}
+
+.adjust-preview-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.adjust-preview-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.adjust-preview-val {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.adjust-preview-val.resulting {
+  font-size: 18px;
+}
+
+.adjust-preview-arrow {
+  font-size: 18px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ===== KARDEX MODAL ===== */
+.kardex-modal {
+  max-width: 960px;
+  width: 95vw;
+}
+
+.kardex-filters-bar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.kardex-filter-select {
+  min-width: 210px;
+  flex: 1;
+}
+
+.kardex-summary-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.kardex-summary-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.kardex-summary-pill.entry strong {
+  color: var(--green-primary);
+}
+
+.kardex-summary-pill.exit strong {
+  color: var(--danger);
+}
+
+.kardex-table-wrapper {
+  max-height: 420px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.kardex-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.kardex-badge-info {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.kardex-badge-entry {
+  background: var(--green-soft);
+  color: var(--green-primary);
+}
+
+.kardex-badge-exit {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.kardex-badge-warning {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.kardex-qty {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kardex-qty.positive {
+  color: var(--green-primary);
+}
+
+.kardex-qty.negative {
+  color: var(--danger);
+}
+
+.kardex-reason-cell {
+  max-width: 260px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 @media (max-width: 767px) {
-  .edit-form-row {
+  .edit-form-row,
+  .edit-form-row-2,
+  .adjust-direction-tabs {
     grid-template-columns: 1fr;
   }
-  .edit-product-modal {
+  .edit-product-modal,
+  .adjust-stock-modal,
+  .kardex-modal {
     max-width: 95vw;
   }
   .inv-filters {

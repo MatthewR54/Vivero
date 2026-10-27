@@ -20,12 +20,16 @@ import {
   createReconciliation as createReconciliationDb,
   createAccountTransfer as createAccountTransferDb
 } from '../services/financeService';
+import {
+  fetchInventoryMovements,
+  adjustProductStock as adjustProductStockDb
+} from '../services/inventoryService';
 
 // ============================================================
 // FUENTE DE DATOS
 // - Con VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY configuradas:
-//   productos, ventas, cuentas, movimientos monetarios, conciliaciones
-//   y lotes de producción se leen y escriben en Supabase (PostgreSQL).
+//   productos, ventas, cuentas, movimientos monetarios, conciliaciones,
+//   kardex de inventario y lotes de producción se leen y escriben en Supabase.
 // - Sin ellas: modo local con localStorage (comportamiento original),
 //   útil para trabajar en diseño sin credenciales.
 // ============================================================
@@ -80,6 +84,22 @@ const FALLBACK_RECONCILIATIONS = [
     createdAt: new Date().toISOString()
   }
 ];
+
+const FALLBACK_INVENTORY_MOVEMENTS = seedProducts.map(p => ({
+  id: `init-${p.id}`,
+  productId: p.id,
+  productName: p.name,
+  productSku: p.sku,
+  movementType: 'INICIAL',
+  quantity: p.stock,
+  previousStock: 0,
+  resultingStock: p.stock,
+  reason: 'Carga de inventario inicial',
+  referenceId: 'INIT-2026',
+  date: getTodayString(),
+  time: '08:00',
+  createdAt: new Date().toISOString()
+}));
 
 const FALLBACK_PRODUCTION_BATCHES = [
   {
@@ -136,6 +156,7 @@ function freshLocalData() {
     statistics: seedStatistics,
     accounts: FALLBACK_ACCOUNTS,
     reconciliations: FALLBACK_RECONCILIATIONS,
+    inventoryMovements: FALLBACK_INVENTORY_MOVEMENTS,
     productionBatches: FALLBACK_PRODUCTION_BATCHES,
     nextSaleId: seedNextSaleId,
     nextProductId: { ...seedNextProductId }
@@ -251,6 +272,12 @@ export function AppDataProvider({ children }) {
     enabled: USE_SUPABASE
   });
 
+  const inventoryMovementsQuery = useQuery({
+    queryKey: ['inventoryMovements'],
+    queryFn: fetchInventoryMovements,
+    enabled: USE_SUPABASE
+  });
+
   const productionBatchesQuery = useQuery({
     queryKey: ['productionBatches'],
     queryFn: fetchProductionBatches,
@@ -276,6 +303,10 @@ export function AppDataProvider({ children }) {
   const reconciliations = useMemo(
     () => (USE_SUPABASE ? reconciliationsQuery.data ?? [] : (data.reconciliations ?? FALLBACK_RECONCILIATIONS)),
     [reconciliationsQuery.data, data.reconciliations]
+  );
+  const inventoryMovements = useMemo(
+    () => (USE_SUPABASE ? inventoryMovementsQuery.data ?? [] : (data.inventoryMovements ?? FALLBACK_INVENTORY_MOVEMENTS)),
+    [inventoryMovementsQuery.data, data.inventoryMovements]
   );
   const productionBatches = useMemo(
     () => (USE_SUPABASE ? productionBatchesQuery.data ?? FALLBACK_PRODUCTION_BATCHES : (data.productionBatches ?? FALLBACK_PRODUCTION_BATCHES)),
@@ -409,28 +440,52 @@ export function AppDataProvider({ children }) {
         queryClient.invalidateQueries({ queryKey: ['products'] }),
         queryClient.invalidateQueries({ queryKey: ['sales'] }),
         queryClient.invalidateQueries({ queryKey: ['accounts'] }),
-        queryClient.invalidateQueries({ queryKey: ['moneyMovements'] })
+        queryClient.invalidateQueries({ queryKey: ['moneyMovements'] }),
+        queryClient.invalidateQueries({ queryKey: ['inventoryMovements'] })
       ]);
       return { saleId: result.saleId };
     }
 
     // Modo local (localStorage)
     const saleId = generateSaleId(data.nextSaleId);
+    const today = getTodayString();
+    const nowTime = getCurrentTime();
     setData(prev => {
       const newProducts = deductStock(prev.products, saleData.items);
       const newSale = {
         id: saleId,
-        date: getTodayString(),
-        time: getCurrentTime(),
+        date: today,
+        time: nowTime,
         customer: saleData.customer,
         items: saleData.items,
         paymentMethod: saleData.paymentMethod,
         total: saleData.total
       };
+      const saleMovements = saleData.items.map((item, idx) => {
+        const prodBefore = prev.products.find(p => p.id === item.productId);
+        const prevStock = prodBefore?.stock ?? 0;
+        const resStock = Math.max(0, prevStock - item.quantity);
+        return {
+          id: `mov-sale-${saleId}-${idx}`,
+          productId: item.productId,
+          productName: item.name,
+          productSku: prodBefore?.sku ?? item.productId,
+          movementType: 'SALIDA_VENTA',
+          quantity: -item.quantity,
+          previousStock: prevStock,
+          resultingStock: resStock,
+          reason: `Venta en POS comprobante ${saleId}`,
+          referenceId: saleId,
+          date: today,
+          time: nowTime,
+          createdAt: new Date().toISOString()
+        };
+      });
       return {
         ...applySaleToSummary(prev, newSale, newProducts),
         products: newProducts,
         sales: [newSale, ...prev.sales],
+        inventoryMovements: [...saleMovements, ...(prev.inventoryMovements ?? FALLBACK_INVENTORY_MOVEMENTS)],
         nextSaleId: prev.nextSaleId + 1
       };
     });
@@ -453,20 +508,26 @@ export function AppDataProvider({ children }) {
         price: productData.price || 0,
         active: true
       });
-      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['products'] }),
+        queryClient.invalidateQueries({ queryKey: ['inventoryMovements'] })
+      ]);
       return created;
     }
 
+    const today = getTodayString();
+    const nowTime = getCurrentTime();
     setData(prev => {
       const nextNum = (prev.nextProductId[cat] || 1);
       const sku = productData.sku || generateSKU(cat, nextNum);
+      const initialStock = productData.stock || 0;
       const newProduct = {
         id: sku,
         sku,
         name: productData.name,
         category: cat,
         origin: productData.origin || '',
-        stock: productData.stock || 0,
+        stock: initialStock,
         minStock: productData.minStock || 5,
         cost: productData.cost || 0,
         price: productData.price || 0,
@@ -475,9 +536,27 @@ export function AppDataProvider({ children }) {
         unit: productData.unit || 'Unidad',
         description: productData.description || ''
       };
+      const initMov = initialStock > 0
+        ? [{
+            id: `init-${sku}-${Date.now()}`,
+            productId: sku,
+            productName: productData.name,
+            productSku: sku,
+            movementType: 'INICIAL',
+            quantity: initialStock,
+            previousStock: 0,
+            resultingStock: initialStock,
+            reason: 'Stock inicial al registrar el producto',
+            referenceId: sku,
+            date: today,
+            time: nowTime,
+            createdAt: new Date().toISOString()
+          }]
+        : [];
       return {
         ...prev,
         products: [...prev.products, newProduct],
+        inventoryMovements: [...initMov, ...(prev.inventoryMovements ?? FALLBACK_INVENTORY_MOVEMENTS)],
         nextProductId: { ...prev.nextProductId, [cat]: nextNum + 1 }
       };
     });
@@ -495,6 +574,81 @@ export function AppDataProvider({ children }) {
       products: prev.products.map(p => (p.id === productId ? { ...p, ...updates } : p))
     }));
   }, [queryClient]);
+
+  // ---------- Ajuste Manual de Inventario y Kardex (RF-26 a RF-30) ----------
+  const adjustStock = useCallback(async ({
+    productId,
+    direction,
+    quantity,
+    reasonCategory,
+    notes
+  }) => {
+    const targetProduct = products.find(p => p.id === productId);
+    if (!targetProduct) {
+      throw new Error('Producto no encontrado');
+    }
+
+    if (USE_SUPABASE) {
+      const createdMov = await adjustProductStockDb({
+        product: targetProduct,
+        direction,
+        quantity,
+        reasonCategory,
+        notes
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['products'] }),
+        queryClient.invalidateQueries({ queryKey: ['inventoryMovements'] })
+      ]);
+      return createdMov;
+    }
+
+    // Modo local (localStorage)
+    const qty = Math.floor(Number(quantity));
+    if (!qty || Number.isNaN(qty) || qty <= 0) {
+      throw new Error('La cantidad del ajuste debe ser un número entero mayor a 0');
+    }
+    const cleanReason = [reasonCategory, (notes ?? '').trim()]
+      .filter(Boolean)
+      .join(': ')
+      .trim();
+    if (!cleanReason) {
+      throw new Error('El motivo del ajuste de inventario es obligatorio');
+    }
+
+    const previousStock = Number(targetProduct.stock) || 0;
+    const isEntry = direction === 'ENTRADA';
+    const signedQuantity = isEntry ? qty : -qty;
+    const resultingStock = previousStock + signedQuantity;
+    if (resultingStock < 0) {
+      throw new Error(`No se pueden descontar ${qty} unidades (Stock actual: ${previousStock} uds)`);
+    }
+
+    const refCode = `AJU-${Date.now().toString().slice(-6)}`;
+    const newMov = {
+      id: `mov-${Date.now()}`,
+      productId: targetProduct.id,
+      productName: targetProduct.name,
+      productSku: targetProduct.sku,
+      movementType: isEntry ? 'AJUSTE_MANUAL_ENTRADA' : 'AJUSTE_MANUAL_SALIDA',
+      quantity: signedQuantity,
+      previousStock,
+      resultingStock,
+      reason: cleanReason,
+      referenceId: refCode,
+      date: getTodayString(),
+      time: getCurrentTime(),
+      createdAt: new Date().toISOString()
+    };
+
+    setData(prev => ({
+      ...prev,
+      products: prev.products.map(p => (p.id === productId ? { ...p, stock: resultingStock } : p)),
+      inventoryMovements: [newMov, ...(prev.inventoryMovements ?? FALLBACK_INVENTORY_MOVEMENTS)]
+    }));
+
+    return newMov;
+  }, [products, queryClient]);
 
   // ---------- Arqueo / Conciliación de Cuentas (RF-102 a RF-104) ----------
   const addReconciliation = useCallback(async ({
@@ -657,6 +811,7 @@ export function AppDataProvider({ children }) {
       accountsQuery.refetch();
       moneyMovementsQuery.refetch();
       reconciliationsQuery.refetch();
+      inventoryMovementsQuery.refetch();
       productionBatchesQuery.refetch();
     }
   };
@@ -668,6 +823,7 @@ export function AppDataProvider({ children }) {
     accounts,
     moneyMovements,
     reconciliations,
+    inventoryMovements,
     productionBatches,
     transactions,
     alerts,
@@ -678,6 +834,7 @@ export function AppDataProvider({ children }) {
     addSale,
     addProduct,
     updateProduct,
+    adjustStock,
     addReconciliation,
     transferBetweenAccounts,
     resetDemoData

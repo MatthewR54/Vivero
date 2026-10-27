@@ -10,18 +10,18 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados" : 58
-    "En Progreso / Parciales" : 14
+    "Completados" : 66
+    "En Progreso / Parciales" : 12
     "Simulados (Play-Pretend / Fijos)" : 1
-    "No Iniciados (Falta Módulo)" : 75
+    "No Iniciados (Falta Módulo)" : 69
 ```
 
 ### Principales Simulaciones a Eliminar:
-1. ~~**Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-37).~~ ✅ Productos, ventas, cuentas, movimientos, conciliaciones y lotes se leen de Supabase (ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)). `localStorage` queda solo como modo local sin credenciales.
+1. ~~**Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-37).~~ ✅ Productos, ventas, cuentas, movimientos de dinero, movimientos de inventario (Kardex), conciliaciones y lotes se leen de Supabase (ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)). `localStorage` queda solo como modo local sin credenciales.
 2. ~~**Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).~~ ✅ KPIs, alertas de stock, lotes activos y transacciones del Panel ahora se calculan en tiempo real desde la base de datos.
 3. ~~**Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) muestra "$0.00 Diferencia (Cuadrado)" sin permitir ingresar el conteo físico de dinero real ni registrar justificaciones (RF-102 a RF-104).~~ ✅ Modal interactivo de Arqueo y Conciliación (con cálculo de faltante/sobrante, justificación obligatoria, ajuste automático de cuenta, traslado entre cuentas e historial de conciliaciones) implementado y conectado a Supabase.
-4. ~~**Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.~~ ✅ Los filtros de período en el Panel y en Estadísticas filtran ventas y movimientos reales por fecha.
-5. **Módulos Faltantes:** Proveedores, Compras, Producción Propia de Plantas y Kardex de Inventario aún no tienen pantallas en el frontend (sus tablas ya existen en Supabase).
+4. ~~**Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.~~ ✅ Los filtros de período en el Panel, en Estadísticas y en el Kardex de Inventario filtran registros reales por fecha.
+5. **Módulos Faltantes:** Proveedores, Compras y Producción Propia de Plantas aún no tienen pantallas dedicadas en el frontend (sus tablas ya existen en Supabase).
 
 ---
 
@@ -37,13 +37,13 @@ gantt
     section Sprint 2: Core ERP & Kardex
     Módulo de Proveedores                  :s2_1, 2026-10-22, 2d
     Módulo de Compras & Costo Promedio     :s2_2, after s2_1, 3d
-    Kardex de Inventario & Ajustes         :s2_3, after s2_2, 3d
+    Kardex de Inventario & Ajustes         :done, s2_3, after s2_2, 3d
     section Sprint 3: Procesos Especializados
     Producción Propia de Plantas           :s3_1, 2026-10-29, 4d
     Merchandising Personalizado            :s3_2, after s3_1, 3d
     section Sprint 4: Tesorería & Cierre
-    Cuentas, Arqueo y Conciliación         :s4_1, 2026-11-05, 3d
-    Dashboard Dinámico & Reportes          :s4_2, after s4_1, 2d
+    Cuentas, Arqueo y Conciliación         :done, s4_1, 2026-11-05, 3d
+    Dashboard Dinámico & Reportes          :done, s4_2, after s4_1, 2d
     Pruebas Responsive y Despliegue Final  :s4_3, after s4_2, 2d
 ```
 
@@ -58,7 +58,7 @@ gantt
   - ~~Ejecutar script de seed inicial con los datos de [`src/data/seedData.js`](src/data/seedData.js).~~ ✅ Datos semilla cargados vía `supabase/seed.sql`.
 - [x] **Migración de Módulos Existentes:**
   - ~~Instalar `@tanstack/react-query` en el frontend.~~ ✅ Instalado `@tanstack/react-query` v5 y `@supabase/supabase-js`. `QueryClientProvider` configurado en `src/main.jsx` con caché de 5 min, gc de 30 min y retry de 1 intento.
-  - ~~Crear cliente Supabase y capa de servicios.~~ ✅ Creados `src/services/supabaseClient.js`, `src/services/productsService.js`, `src/services/salesService.js` y `src/hooks/useProducts.js`.
+  - ~~Crear cliente Supabase y capa de servicios.~~ ✅ Creados `src/services/supabaseClient.js`, `src/services/productsService.js`, `src/services/salesService.js`, `src/services/financeService.js`, `src/services/inventoryService.js` y `src/hooks/useProducts.js`.
   - ~~Conectar [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx) al endpoint `GET /api/products` y `PATCH /api/products/:id`.~~ ✅ Inventario y Registro de Producto leen/escriben la tabla `products` vía `productsService.js` (el stock inicial queda en el Kardex por trigger).
   - ~~Conectar [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx) al endpoint transaccional `POST /api/sales`.~~ ✅ Nueva Venta usa la función RPC `process_sale_transaction` (venta atómica: stock, detalle, Kardex `SALIDA_VENTA` y entrada de dinero en la cuenta del medio de pago).
   - ~~Conectar [`src/pages/Sales.jsx`](src/pages/Sales.jsx) al historial en servidor.~~ ✅ El historial se lee de `sales` + `sale_items`. ⏳ *Pendiente:* paginación y búsqueda en servidor (hoy se cargan todas las ventas y se filtra en el navegador).
@@ -76,10 +76,10 @@ gantt
   - Implementar vista `/compras/nueva` para registrar facturas de proveedores.
   - Actualización automática de existencias al ingresar una compra.
   - Recálculo automático del **costo promedio ponderado** (RF-33).
-- [ ] **Kardex y Movimientos de Inventario (RF-24 a RF-30):**
-  - ✅ *Avance:* la tabla `inventory_movements` ya registra automáticamente el stock inicial (`INICIAL`) y las salidas por venta (`SALIDA_VENTA`).
-  - Pantalla o pestaña de *Historial de Movimientos* por producto.
-  - Modal para **Ajustes de Inventario** con campo obligatorio de justificación/motivo (merma, rotura, donación social).
+- [x] **Kardex y Movimientos de Inventario (RF-24 a RF-30):**
+  - ~~La tabla `inventory_movements` registra automáticamente el stock inicial (`INICIAL`) y las salidas por venta (`SALIDA_VENTA`).~~ ✅ Conectada al frontend vía [`src/services/inventoryService.js`](src/services/inventoryService.js).
+  - ~~Pantalla o pestaña de *Historial de Movimientos* por producto.~~ ✅ Modal de Kardex en [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx) con filtros por producto (`RF-29`), período (`RF-30`), sentido (entradas/salidas) y exportación CSV.
+  - ~~Modal para **Ajustes de Inventario** con campo obligatorio de justificación/motivo (merma, rotura, donación social).~~ ✅ Modal de Ajuste Manual (`AJUSTE_MANUAL_ENTRADA` y `AJUSTE_MANUAL_SALIDA`) implementado en [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx).
 
 ---
 

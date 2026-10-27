@@ -63,22 +63,21 @@ pie title Distribución de Tareas Inmediatas por Módulo
 
 ---
 
-## 🟢 3. Gestión & Control de Inventario
-*En [`Inventory.jsx`](src/pages/Inventory.jsx), el stock está bloqueado en el modal y faltan ajustes manuales y activación de productos.*
+## 🟢 3. Gestión & Control de Inventario — ✅ Completado
+*En [`Inventory.jsx`](src/pages/Inventory.jsx) ahora es posible registrar ajustes manuales de stock (entradas y mermas con motivo obligatorio), consultar y exportar el Kardex de movimientos por producto o período, activar/desactivar la visibilidad en POS y editar la ficha técnica completa (`unit`, `location`, `description`).*
 
-- [ ] **3.1. Modal de Ajuste Manual de Inventario ([RF-26](docs/requisitos.md#L67), [RF-27](docs/requisitos.md#L69))**
-  - **Archivos:** [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx), [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx)
-  - **Acción:** Crear botón "Ajuste de Stock" por fila que permita registrar una entrada o salida manual con selector de motivo obligatorio (*Planta marchita/dañada*, *Donación recibida*, *Conteo físico*, *Autoconsumo vivero*).
-- [ ] **3.2. Historial de Movimientos de Inventario (Kardex en memoria) ([RF-28 a RF-30](docs/requisitos.md#L71-L75))**
-  - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx)
-  - **Acción:** Añadir colección `inventoryMovements` que guarde cada cambio de stock (sea por venta, ajuste manual o compra), mostrando un modal de "Ver Kardex" por producto.
-  - **Avance:** ✅ En Supabase, la tabla `inventory_movements` ya registra automáticamente el stock inicial (`INICIAL`) y cada venta (`SALIDA_VENTA`). Falta la lectura en un servicio y el modal "Ver Kardex".
-- [ ] **3.3. Control de Activar / Desactivar Producto ([RF-08](docs/requisitos.md#L23))**
+- [x] **3.1. Modal de Ajuste Manual de Inventario ([RF-26](docs/requisitos.md#L67), [RF-27](docs/requisitos.md#L69))**
+  - **Archivos:** [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx), [`src/services/inventoryService.js`](src/services/inventoryService.js), [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx)
+  - **Acción:** Botón "Ajustar" por fila (y acceso directo desde el modal de edición) que permite registrar entradas (`AJUSTE_MANUAL_ENTRADA`) o salidas/mermas (`AJUSTE_MANUAL_SALIDA`) con selector de motivo obligatorio (*Planta marchita/dañada*, *Donación recibida*, *Conteo físico*, *Autoconsumo vivero*, etc.), notas opcionales y vista previa del stock resultante.
+- [x] **3.2. Historial de Movimientos de Inventario (Kardex) ([RF-09](docs/requisitos.md#L25), [RF-28 a RF-30](docs/requisitos.md#L71-L75))**
+  - **Archivos:** [`src/services/inventoryService.js`](src/services/inventoryService.js), [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx)
+  - **Acción:** Servicio `fetchInventoryMovements()` y estado `inventoryMovements` sincronizado con Supabase (`inventory_movements`), junto con el modal "Ver Kardex" con filtro por producto ([RF-29](docs/requisitos.md#L73)), filtro por período de fechas ([RF-30](docs/requisitos.md#L75)), filtro por sentido (entradas/salidas) y exportación a CSV.
+- [x] **3.3. Control de Activar / Desactivar Producto ([RF-08](docs/requisitos.md#L23))**
   - **Archivos:** [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx)
-  - **Acción:** El campo `active` ya existe en el modelo, pero el modal de edición solo muestra texto estático. Reemplazarlo por un selector o *switch* interactivo (Activo / Inactivo). Los productos inactivos deben quedar ocultos en Nueva Venta pero permanecer visibles en Inventario con un badge "Inactivo".
-- [ ] **3.4. Edición de Campos Faltantes ([RF-02](docs/requisitos.md#L11), [RF-07](docs/requisitos.md#L21))**
+  - **Acción:** Selector interactivo de visibilidad (*Activo en Ventas* / *Inactivo — Oculto en POS*) en el modal de edición, filtro de productos inactivos y badge `"Inactivo"` en la tabla de inventario.
+- [x] **3.4. Edición de Campos Faltantes y Exportación CSV ([RF-02](docs/requisitos.md#L11), [RF-07](docs/requisitos.md#L21), [RF-126](docs/requisitos.md#L320))**
   - **Archivos:** [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx)
-  - **Acción:** Permitir editar la descripción, unidad y ubicación del producto en el modal de edición (actualmente esos campos no se pueden modificar una vez creados).
+  - **Acción:** Edición de `unit` (unidad de medida), `location` (ubicación en vivero/bodega) y `description` (descripción y cuidados) en el modal de edición, además del botón "Exportar CSV" del catálogo de inventario.
 
 ---
 

@@ -70,31 +70,47 @@ export function getOffsetDateString(daysOffset) {
 }
 
 /**
- * Verifica si una fecha YYYY-MM-DD pertenece al rango seleccionado en el filtro
- * Soporta chips del Dashboard ('Hoy', 'Ayer', 'Últimos 7 días', 'Este Mes', 'Todo')
- * y de Estadísticas ('Día', 'Semana', 'Este Mes', 'Año')
+ * Verifica si una fecha YYYY-MM-DD (o timestamp ISO) pertenece al rango seleccionado
+ * Soporta chips del Dashboard ('Hoy', 'Ayer', 'Últimos 7 días', 'Este Mes', 'Todo'),
+ * de Estadísticas ('Día', 'Semana', 'Este Mes', 'Año') y claves cortas ('all', 'today', '7d', 'month')
  */
 export function isDateInPeriod(dateStr, filterName) {
-  if (!dateStr || filterName === 'Todo') return true;
+  if (!dateStr || filterName === 'Todo' || filterName === 'all') return true;
+  const normalized = String(dateStr).slice(0, 10);
   const today = getTodayString();
 
-  if (filterName === 'Hoy' || filterName === 'Día') {
-    return dateStr === today;
+  if (filterName === 'Hoy' || filterName === 'Día' || filterName === 'today') {
+    return normalized === today;
   }
   if (filterName === 'Ayer') {
-    return dateStr === getOffsetDateString(-1);
+    return normalized === getOffsetDateString(-1);
   }
-  if (filterName === 'Últimos 7 días' || filterName === 'Semana') {
+  if (filterName === 'Últimos 7 días' || filterName === 'Semana' || filterName === '7d') {
     const start = getOffsetDateString(-6);
-    return dateStr >= start && dateStr <= today;
+    return normalized >= start && normalized <= today;
   }
-  if (filterName === 'Este Mes') {
-    return dateStr.slice(0, 7) === today.slice(0, 7);
+  if (filterName === 'Este Mes' || filterName === 'month') {
+    return normalized.slice(0, 7) === today.slice(0, 7);
   }
   if (filterName === 'Año') {
-    return dateStr.slice(0, 4) === today.slice(0, 4);
+    return normalized.slice(0, 4) === today.slice(0, 4);
   }
   return true;
+}
+
+/**
+ * Formatea una fecha/hora ISO o YYYY-MM-DD en formato legible corto (DD/MM/YYYY HH:MM)
+ */
+export function formatShortDateTime(isoOrDate) {
+  if (!isoOrDate) return '—';
+  const str = String(isoOrDate);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) {
+    return str;
+  }
+  const d = new Date(str);
+  if (Number.isNaN(d.getTime())) return str.slice(0, 16);
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 /**
