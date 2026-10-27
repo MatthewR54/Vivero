@@ -81,21 +81,21 @@ pie title Distribución de Tareas Inmediatas por Módulo
 
 ---
 
-## 🟣 4. Módulo de Proveedores (Totalmente Faltante)
-*En [`seguimiento_requisitos.csv`](docs/seguimiento_requisitos.csv) los requisitos RF-10 a RF-14 están marcados como "No iniciado".*
+## 🟣 4. Módulo de Proveedores — ✅ Completado
+*El directorio de proveedores, su vinculación con productos del catálogo y la consulta de su historial de compras ([RF-10 a RF-14](docs/requisitos.md#L27-L38)) están implementados y conectados con Supabase (`suppliers`, `products`, `purchases`).*
 
-- [ ] **4.1. Estructura de Datos de Proveedores en Contexto ([RF-10](docs/requisitos.md#L29))**
-  - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/data/seedData.js`](src/data/seedData.js)
-  - **Acción:** Añadir array `seedSuppliers` con proveedores iniciales (ejemplo: *Distribuidora Macetas del Valle*, *Sustratos y Abonos Orgánicos S.A.S.*) y funciones `addSupplier`, `updateSupplier` en `AppDataContext`.
-- [ ] **4.2. Vista de Gestión de Proveedores ([RF-11](docs/requisitos.md#L31), [RF-12](docs/requisitos.md#L33))**
-  - **Archivos:** Crear `src/pages/Suppliers.jsx` y `src/pages/Suppliers.css`.
-  - **Acción:** Tabla con buscador por nombre, contacto, teléfono, correo y botón "Registrar Proveedor".
-- [ ] **4.3. Navegación en Navbar y Rutas**
+- [x] **4.1. Estructura de Datos y Servicio de Proveedores en Contexto ([RF-10](docs/requisitos.md#L29), [RF-14](docs/requisitos.md#L37))**
+  - **Archivos:** [`src/services/suppliersService.js`](src/services/suppliersService.js), [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/data/seedData.js`](src/data/seedData.js)
+  - **Acción:** Servicio `suppliersService.js` (`fetchSuppliers`, `createSupplier`, `updateSupplierInDb`, `fetchPurchases`), datos semilla `seedSuppliers` y funciones `addSupplier`, `updateSupplier` en `AppDataContext` con soporte dual Supabase + `localStorage`.
+- [x] **4.2. Vista de Gestión de Proveedores ([RF-11](docs/requisitos.md#L31), [RF-12](docs/requisitos.md#L33), [RF-13](docs/requisitos.md#L35), [RF-14](docs/requisitos.md#L37))**
+  - **Archivos:** [`src/pages/Suppliers.jsx`](src/pages/Suppliers.jsx), [`src/pages/Suppliers.css`](src/pages/Suppliers.css)
+  - **Acción:** Tabla con buscador por nombre, contacto, teléfono, correo o dirección, filtros por estado, modal de alta/edición, modal de gestión de productos asociados e historial de compras por proveedor, y exportación a CSV.
+- [x] **4.3. Navegación en Navbar y Rutas**
   - **Archivos:** [`src/components/layout/Navbar.jsx`](src/components/layout/Navbar.jsx), [`src/App.jsx`](src/App.jsx)
-  - **Acción:** Añadir la ruta `/proveedores` y el enlace en el menú de navegación principal.
-- [ ] **4.4. Asociación de Proveedor a Productos Adquiridos ([RF-13](docs/requisitos.md#L35))**
-  - **Archivos:** [`src/pages/NewProduct.jsx`](src/pages/NewProduct.jsx)
-  - **Acción:** Al seleccionar origen "Adquirido", mostrar un desplegable con los proveedores registrados para vincularlo.
+  - **Acción:** Ruta `/proveedores` añadida en `App.jsx` y enlace `"Proveedores"` integrado en el menú de navegación principal.
+- [x] **4.4. Asociación de Proveedor a Productos ([RF-13](docs/requisitos.md#L35))**
+  - **Archivos:** [`src/pages/NewProduct.jsx`](src/pages/NewProduct.jsx), [`src/pages/Inventory.jsx`](src/pages/Inventory.jsx), [`src/pages/Suppliers.jsx`](src/pages/Suppliers.jsx)
+  - **Acción:** Selector de proveedor asociado al registrar productos en `NewProduct.jsx`, al editar productos en `Inventory.jsx` y desde la ficha de cada proveedor en `Suppliers.jsx`.
 
 ---
 

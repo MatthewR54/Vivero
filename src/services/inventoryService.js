@@ -71,7 +71,7 @@ export async function adjustProductStock({
   }
 
   const previousStock = Number(product.stock) || 0;
-  const isEntry = direction === 'ENTRADA';
+  const isEntry = direction === 'ENTRADA' || direction === 'entry';
   const signedQuantity = isEntry ? qty : -qty;
   const resultingStock = previousStock + signedQuantity;
 

@@ -10,10 +10,10 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados" : 66
+    "Completados" : 71
     "En Progreso / Parciales" : 12
     "Simulados (Play-Pretend / Fijos)" : 1
-    "No Iniciados (Falta Módulo)" : 69
+    "No Iniciados (Falta Módulo)" : 64
 ```
 
 ### Principales Simulaciones a Eliminar:
@@ -35,7 +35,7 @@ gantt
     Despliegue PostgreSQL & Migraciones     :done, s1_1, 2026-10-15, 3d
     Migración Productos/Ventas a API       :done, s1_3, after s1_1, 3d
     section Sprint 2: Core ERP & Kardex
-    Módulo de Proveedores                  :s2_1, 2026-10-22, 2d
+    Módulo de Proveedores                  :done, s2_1, 2026-10-22, 2d
     Módulo de Compras & Costo Promedio     :s2_2, after s2_1, 3d
     Kardex de Inventario & Ajustes         :done, s2_3, after s2_2, 3d
     section Sprint 3: Procesos Especializados
@@ -69,9 +69,9 @@ gantt
 ### 📦 Sprint 2 (Semana 2): Proveedores, Compras y Kardex de Inventario
 > **Objetivo:** Cerrar el ciclo de abastecimiento de productos adquiridos y habilitar la trazabilidad de inventario.
 
-- [ ] **Módulo de Proveedores (RF-10 a RF-14):**
-  - Crear vista `/proveedores` con listado, buscador y formulario de alta/edición.
-  - Asociar productos del catálogo con sus respectivos proveedores habituales.
+- [x] **Módulo de Proveedores (RF-10 a RF-14):**
+  - ~~Crear vista `/proveedores` con listado, buscador y formulario de alta/edición.~~ ✅ Implementada en [`src/pages/Suppliers.jsx`](src/pages/Suppliers.jsx) y conectada a Supabase vía [`src/services/suppliersService.js`](src/services/suppliersService.js).
+  - ~~Asociar productos del catálogo con sus respectivos proveedores habituales.~~ ✅ Vinculación disponible desde `/proveedores`, `/inventario/nuevo` y el modal de edición en `/inventario`, además de consulta del historial de compras por proveedor (`RF-14`).
 - [ ] **Módulo de Compras (RF-15 a RF-22):**
   - Implementar vista `/compras/nueva` para registrar facturas de proveedores.
   - Actualización automática de existencias al ingresar una compra.

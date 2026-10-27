@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppData } from '../context/AppDataContext';
 import { formatCOP } from '../utils/currency';
 import { calculateMargin, generateSKU } from '../utils/calculations';
-import { ArrowLeft, Save, X } from 'lucide-react';
+import { ArrowLeft, Save, X, Truck } from 'lucide-react';
 import './NewProduct.css';
 
 const ORIGINS = [
@@ -13,8 +13,13 @@ const ORIGINS = [
 ];
 
 export default function NewProduct() {
-  const { addProduct, showToast, nextProductId } = useAppData();
+  const { addProduct, suppliers, showToast, nextProductId } = useAppData();
   const navigate = useNavigate();
+
+  const activeSuppliers = useMemo(
+    () => (suppliers || []).filter(s => s.active !== false),
+    [suppliers]
+  );
 
   const [form, setForm] = useState({
     category: 'vivero',
@@ -25,7 +30,8 @@ export default function NewProduct() {
     unit: 'Unidad / Maceta de Cerámica',
     location: 'Estante A-04 • Zona Climatizada',
     cost: 28000,
-    price: 65000
+    price: 65000,
+    supplierId: ''
   });
 
   const [errors, setErrors] = useState({});
@@ -40,7 +46,14 @@ export default function NewProduct() {
   const margin = calculateMargin(form.price, form.cost);
 
   const handleChange = (field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+    setForm(prev => {
+      const next = { ...prev, [field]: value };
+      // Si selecciona origen "Adquirido" (comestibles) y aún no tiene proveedor, preseleccionar el primero activo
+      if (field === 'category' && value === 'comestibles' && !prev.supplierId && activeSuppliers.length > 0) {
+        next.supplierId = String(activeSuppliers[0].id);
+      }
+      return next;
+    });
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
@@ -53,6 +66,9 @@ export default function NewProduct() {
     if (!form.stock && form.stock !== 0) newErrors.stock = 'Stock requerido';
     if (!form.cost) newErrors.cost = 'Costo requerido';
     if (!form.price) newErrors.price = 'Precio requerido';
+    if (form.category === 'comestibles' && !form.supplierId && activeSuppliers.length > 0) {
+      newErrors.supplierId = 'Selecciona el proveedor distribuidor para productos adquiridos';
+    }
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
@@ -67,13 +83,14 @@ export default function NewProduct() {
         name: form.name,
         category: form.category,
         origin: selectedOrigin?.origin || '',
-        stock: parseInt(form.stock),
-        minStock: parseInt(form.minStock),
-        cost: parseInt(form.cost),
-        price: parseInt(form.price),
+        stock: parseInt(form.stock, 10),
+        minStock: parseInt(form.minStock, 10),
+        cost: parseInt(form.cost, 10),
+        price: parseInt(form.price, 10),
         unit: form.unit,
         location: form.location,
-        description: form.description
+        description: form.description,
+        supplierId: form.supplierId ? Number(form.supplierId) : null
       });
 
       showToast('Producto agregado al catálogo', 'success');
@@ -125,6 +142,36 @@ export default function NewProduct() {
               </select>
             </div>
 
+            {/* RF-13: Asociación de Proveedor */}
+            <div className="input-group">
+              <label>
+                <Truck size={13} style={{ marginRight: 5, display: 'inline', verticalAlign: 'middle' }} />
+                Proveedor Asociado (RF-13) {form.category === 'comestibles' ? '*' : '(Opcional)'}
+              </label>
+              <select
+                className={`input-field ${errors.supplierId ? 'error' : ''}`}
+                value={form.supplierId}
+                onChange={e => handleChange('supplierId', e.target.value)}
+              >
+                <option value="">
+                  {form.category === 'comestibles'
+                    ? '— Selecciona un proveedor distribuidor —'
+                    : '— Sin proveedor externo (Producción propia) —'}
+                </option>
+                {activeSuppliers.map(s => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}{s.contactName ? ` (${s.contactName})` : ''}
+                  </option>
+                ))}
+              </select>
+              {errors.supplierId && <div className="input-error">{errors.supplierId}</div>}
+              <div className="input-hint">
+                {form.category === 'comestibles'
+                  ? 'Obligatorio para trazabilidad de productos adquiridos a terceros'
+                  : 'Puedes vincular un proveedor de insumos, semillas o abonos'}
+              </div>
+            </div>
+
             <div className="input-group">
               <label>Código de Identificación (SKU) *</label>
               <input type="text" className="input-field" value={autoSku + ' (Generado Automático)'} disabled />
@@ -148,7 +195,7 @@ export default function NewProduct() {
                 className="input-field"
                 value={form.description}
                 onChange={e => handleChange('description', e.target.value)}
-                rows={4}
+                rows={3}
                 placeholder="Descripción del producto..."
               ></textarea>
             </div>

@@ -76,8 +76,16 @@ const MOVEMENT_TYPE_META = {
 };
 
 export default function Inventory() {
-  const { products, inventoryMovements, updateProduct, adjustStock, showToast } = useAppData();
+  const { products, suppliers, inventoryMovements, updateProduct, adjustStock, showToast } = useAppData();
   const navigate = useNavigate();
+
+  const supplierById = useMemo(() => {
+    const map = {};
+    for (const s of suppliers || []) {
+      map[Number(s.id)] = s;
+    }
+    return map;
+  }, [suppliers]);
 
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('all');
@@ -184,7 +192,8 @@ export default function Inventory() {
       active: product.active !== false,
       unit: product.unit || 'Unidad',
       location: product.location || '',
-      description: product.description || ''
+      description: product.description || '',
+      supplierId: product.supplierId ? String(product.supplierId) : ''
     });
     setEditModal(product);
   };
@@ -206,7 +215,8 @@ export default function Inventory() {
         active: Boolean(editForm.active),
         unit: editForm.unit.trim() || 'Unidad',
         location: editForm.location.trim(),
-        description: editForm.description.trim()
+        description: editForm.description.trim(),
+        supplierId: editForm.supplierId ? Number(editForm.supplierId) : null
       });
       showToast('Producto actualizado correctamente', 'success');
       setEditModal(null);
@@ -412,6 +422,9 @@ export default function Inventory() {
                       <td>
                         <div className="td-muted">{p.origin}</div>
                         {p.location && <div className="inv-subtext">📍 {p.location}</div>}
+                        {p.supplierId && supplierById[Number(p.supplierId)] && (
+                          <div className="inv-subtext">🚚 {supplierById[Number(p.supplierId)].name}</div>
+                        )}
                       </td>
                       <td>
                         <span className={`inv-stock inv-stock-${status}`}>
@@ -578,8 +591,8 @@ export default function Inventory() {
                 </div>
               </div>
 
-              {/* Row 3: Unit & Location (RF-02, RF-07) */}
-              <div className="edit-form-row edit-form-row-2">
+              {/* Row 3: Unit, Location & Supplier (RF-02, RF-07, RF-13) */}
+              <div className="edit-form-row">
                 <div className="input-group">
                   <label>Unidad de Medida / Presentación</label>
                   <input
@@ -599,6 +612,21 @@ export default function Inventory() {
                     value={editForm.location}
                     onChange={e => setEditForm({ ...editForm, location: e.target.value })}
                   />
+                </div>
+                <div className="input-group">
+                  <label>Proveedor Asociado (RF-13)</label>
+                  <select
+                    className="input-field"
+                    value={editForm.supplierId || ''}
+                    onChange={e => setEditForm({ ...editForm, supplierId: e.target.value })}
+                  >
+                    <option value="">— Sin proveedor externo —</option>
+                    {(suppliers || []).map(s => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

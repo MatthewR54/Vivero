@@ -8,6 +8,7 @@ import Sales from './pages/Sales';
 import NewSale from './pages/NewSale';
 import Inventory from './pages/Inventory';
 import NewProduct from './pages/NewProduct';
+import Suppliers from './pages/Suppliers';
 import Statistics from './pages/Statistics';
 import './styles/globals.css';
 
@@ -26,6 +27,7 @@ function AppLayout() {
         <Route path="/ventas/nueva" element={<NewSale />} />
         <Route path="/inventario" element={<Inventory />} />
         <Route path="/inventario/nuevo" element={<NewProduct />} />
+        <Route path="/proveedores" element={<Suppliers />} />
         <Route path="/estadistico" element={<Statistics />} />
       </Routes>
     </>

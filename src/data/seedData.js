@@ -4,6 +4,47 @@
 // datos previos en localStorage.
 // ============================================================
 
+export const seedSuppliers = [
+  {
+    id: 1,
+    name: 'Distribuidora Central de Abarrotes',
+    contactName: 'Javier Peña',
+    phone: '+57 312 456 7890',
+    email: 'ventas@distribuidoracentral.co',
+    address: 'Bodega 14 • Central Mayorista',
+    active: true
+  },
+  {
+    id: 2,
+    name: 'FEMSA Colombia',
+    contactName: 'Atención Comercial',
+    phone: '+57 300 123 4567',
+    email: 'pedidos@femsa.com.co',
+    address: 'Zona Industrial Norte',
+    active: true
+  },
+  {
+    id: 3,
+    name: 'Bimbo de Colombia S.A.',
+    contactName: 'Ruta 102 Vivero',
+    phone: '+57 315 987 6543',
+    email: 'entregas@bimbo.com.co',
+    address: 'Autopista Sur Km 8',
+    active: true
+  },
+  {
+    id: 4,
+    name: 'Sustratos & Abonos Orgánicos del Valle',
+    contactName: 'Dra. Elena Gómez',
+    phone: '+57 318 654 3210',
+    email: 'contacto@abonosvalle.org',
+    address: 'Finca El Porvenir • Vereda La Selva',
+    active: true
+  }
+];
+
+export const seedPurchases = [];
+
 export const seedProducts = [
   {
     id: 'PRD-001',
@@ -18,14 +59,15 @@ export const seedProducts = [
     active: true,
     location: 'Estante B-12 • Bodega Principal',
     unit: 'Unidad / Paquete',
-    description: 'Cereal de distribución, venta directa al consumidor.'
+    description: 'Cereal de distribución, venta directa al consumidor.',
+    supplierId: 1
   },
   {
     id: 'PRD-002',
     sku: 'PRD-002',
     name: 'Coca Cola 500ml',
     category: 'comestibles',
-    origin: 'Adquirido (FEMSA)',
+    origin: 'Adquirido (Distribuidora)',
     stock: 96,
     minStock: 24,
     cost: 2600,
@@ -33,14 +75,15 @@ export const seedProducts = [
     active: true,
     location: 'Refrigerador R-01 • Zona Tienda',
     unit: 'Unidad / Botella',
-    description: 'Bebida gaseosa Coca Cola presentación 500ml.'
+    description: 'Bebida gaseosa Coca Cola presentación 500ml.',
+    supplierId: 2
   },
   {
     id: 'PRD-003',
     sku: 'PRD-003',
     name: 'Pan Bimbo',
     category: 'comestibles',
-    origin: 'Adquirido (Bimbo)',
+    origin: 'Adquirido (Distribuidora)',
     stock: 30,
     minStock: 25,
     cost: 3800,
@@ -48,7 +91,8 @@ export const seedProducts = [
     active: true,
     location: 'Estante A-01 • Zona Tienda',
     unit: 'Unidad / Paquete Mediano',
-    description: 'Pan de molde blanco, presentación mediana.'
+    description: 'Pan de molde blanco, presentación mediana.',
+    supplierId: 3
   },
   {
     id: 'VIV-014',
@@ -63,7 +107,8 @@ export const seedProducts = [
     active: true,
     location: 'Estante A-02 • Zona Plantas',
     unit: 'Unidad / Maceta Pequeña',
-    description: 'Planta suculenta Jade, riego cada 10 días, luz directa.'
+    description: 'Planta suculenta Jade, riego cada 10 días, luz directa.',
+    supplierId: 4
   },
   {
     id: 'VIV-022',
@@ -78,7 +123,8 @@ export const seedProducts = [
     active: true,
     location: 'Estante A-03 • Zona Climatizada',
     unit: 'Unidad / Maceta Decorativa',
-    description: 'Orquídea Phalaenopsis de flor blanca, luz indirecta, riego moderado.'
+    description: 'Orquídea Phalaenopsis de flor blanca, luz indirecta, riego moderado.',
+    supplierId: 4
   },
   {
     id: 'MER-009',
@@ -93,7 +139,8 @@ export const seedProducts = [
     active: true,
     location: 'Vitrina V-01 • Zona Merchandising',
     unit: 'Unidad / Prenda',
-    description: 'Camiseta personalizada con diseño comunitario, serigrafía de alta calidad.'
+    description: 'Camiseta personalizada con diseño comunitario, serigrafía de alta calidad.',
+    supplierId: null
   }
 ];
 

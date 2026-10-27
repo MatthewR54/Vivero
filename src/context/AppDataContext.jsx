@@ -2,7 +2,8 @@ import { createContext, useContext, useState, useEffect, useCallback, useMemo } 
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   seedProducts, seedSales, seedCustomers, seedTransactions,
-  seedAlerts, seedStatistics, seedNextSaleId, seedNextProductId
+  seedAlerts, seedStatistics, seedNextSaleId, seedNextProductId,
+  seedSuppliers, seedPurchases
 } from '../data/seedData';
 import { getStockStatus, generateSaleId, generateSKU, getTodayString, getCurrentTime, summarizeItems } from '../utils/calculations';
 import { isSupabaseConfigured } from '../services/supabaseClient';
@@ -24,12 +25,18 @@ import {
   fetchInventoryMovements,
   adjustProductStock as adjustProductStockDb
 } from '../services/inventoryService';
+import {
+  fetchSuppliers,
+  createSupplier as createSupplierDb,
+  updateSupplierInDb,
+  fetchPurchases
+} from '../services/suppliersService';
 
 // ============================================================
 // FUENTE DE DATOS
 // - Con VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY configuradas:
-//   productos, ventas, cuentas, movimientos monetarios, conciliaciones,
-//   kardex de inventario y lotes de producción se leen y escriben en Supabase.
+//   productos, proveedores, compras, ventas, cuentas, movimientos monetarios,
+//   conciliaciones, kardex de inventario y lotes de producción se leen y escriben en Supabase.
 // - Sin ellas: modo local con localStorage (comportamiento original),
 //   útil para trabajar en diseño sin credenciales.
 // ============================================================
@@ -149,6 +156,8 @@ function saveToStorage(data) {
 function freshLocalData() {
   return {
     products: seedProducts,
+    suppliers: seedSuppliers,
+    purchases: seedPurchases,
     sales: seedSales,
     customers: seedCustomers,
     transactions: seedTransactions,
@@ -248,6 +257,18 @@ export function AppDataProvider({ children }) {
     enabled: USE_SUPABASE
   });
 
+  const suppliersQuery = useQuery({
+    queryKey: ['suppliers'],
+    queryFn: fetchSuppliers,
+    enabled: USE_SUPABASE
+  });
+
+  const purchasesQuery = useQuery({
+    queryKey: ['purchases'],
+    queryFn: fetchPurchases,
+    enabled: USE_SUPABASE
+  });
+
   const salesQuery = useQuery({
     queryKey: ['sales'],
     queryFn: fetchSales,
@@ -287,6 +308,14 @@ export function AppDataProvider({ children }) {
   const products = useMemo(
     () => (USE_SUPABASE ? productsQuery.data ?? [] : data.products),
     [productsQuery.data, data.products]
+  );
+  const suppliers = useMemo(
+    () => (USE_SUPABASE ? suppliersQuery.data ?? seedSuppliers : (data.suppliers ?? seedSuppliers)),
+    [suppliersQuery.data, data.suppliers]
+  );
+  const purchases = useMemo(
+    () => (USE_SUPABASE ? purchasesQuery.data ?? [] : (data.purchases ?? seedPurchases)),
+    [purchasesQuery.data, data.purchases]
   );
   const sales = useMemo(
     () => (USE_SUPABASE ? salesQuery.data ?? [] : data.sales),
@@ -368,16 +397,19 @@ export function AppDataProvider({ children }) {
   // Genera alertas dinámicas evaluando stock actual de productos + lotes de cultivo activos (RF-32, RF-146, RF-147)
   const alerts = useMemo(() => {
     const dynamicAlerts = [];
+    const supplierById = new Map(suppliers.map(s => [Number(s.id), s.name]));
 
     for (const p of products) {
       if (!p.active) continue;
       const status = getStockStatus(p.stock, p.minStock);
+      const supName = p.supplierId ? supplierById.get(Number(p.supplierId)) : null;
+      const supNote = supName ? ` Proveedor habitual: ${supName}.` : '';
       if (status === 'critico') {
         dynamicAlerts.push({
           id: `stock-crit-${p.id}`,
           type: 'danger',
           title: `Stock Bajo Crítico: ${p.name}`,
-          description: `Quedan ${p.stock} unidades (Stock mínimo configurado: ${p.minStock}). Requiere reabastecimiento.`,
+          description: `Quedan ${p.stock} unidades (Stock mínimo configurado: ${p.minStock}).${supNote || ' Requiere reabastecimiento.'}`,
           action: 'Reponer',
           route: '/inventario',
           productId: p.id
@@ -387,7 +419,7 @@ export function AppDataProvider({ children }) {
           id: `stock-warn-${p.id}`,
           type: 'warning',
           title: `Stock Próximo a Mínimo: ${p.name}`,
-          description: `Quedan ${p.stock} unidades (Mínimo: ${p.minStock}). Origen: ${p.origin || 'Catálogo'}.`,
+          description: `Quedan ${p.stock} unidades (Mínimo: ${p.minStock}).${supNote || ` Origen: ${p.origin || 'Catálogo'}.`}`,
           action: 'Ver Stock',
           route: '/inventario',
           productId: p.id
@@ -409,7 +441,7 @@ export function AppDataProvider({ children }) {
     }
 
     return dynamicAlerts;
-  }, [products, productionBatches]);
+  }, [products, suppliers, productionBatches]);
 
   const showToast = useCallback((message, type = 'success') => {
     const id = Date.now() + Math.random();
@@ -506,6 +538,7 @@ export function AppDataProvider({ children }) {
         minStock: productData.minStock || 5,
         cost: productData.cost || 0,
         price: productData.price || 0,
+        supplierId: productData.supplierId ? Number(productData.supplierId) : null,
         active: true
       });
       await Promise.all([
@@ -534,7 +567,8 @@ export function AppDataProvider({ children }) {
         active: true,
         location: productData.location || '',
         unit: productData.unit || 'Unidad',
-        description: productData.description || ''
+        description: productData.description || '',
+        supplierId: productData.supplierId ? Number(productData.supplierId) : null
       };
       const initMov = initialStock > 0
         ? [{
@@ -572,6 +606,54 @@ export function AppDataProvider({ children }) {
     setData(prev => ({
       ...prev,
       products: prev.products.map(p => (p.id === productId ? { ...p, ...updates } : p))
+    }));
+  }, [queryClient]);
+
+  // ---------- Proveedores (RF-10 a RF-14) ----------
+  const addSupplier = useCallback(async (supplierData) => {
+    if (!supplierData?.name?.trim()) {
+      throw new Error('El nombre o razón social del proveedor es obligatorio');
+    }
+
+    if (USE_SUPABASE) {
+      const created = await createSupplierDb(supplierData);
+      await queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      return created;
+    }
+
+    let createdSupplier = null;
+    setData(prev => {
+      const currentSuppliers = prev.suppliers ?? seedSuppliers;
+      const nextId = currentSuppliers.reduce((max, s) => Math.max(max, Number(s.id) || 0), 0) + 1;
+      createdSupplier = {
+        id: nextId,
+        name: supplierData.name.trim(),
+        contactName: supplierData.contactName?.trim() || '',
+        phone: supplierData.phone?.trim() || '',
+        email: supplierData.email?.trim() || '',
+        address: supplierData.address?.trim() || '',
+        active: supplierData.active !== false
+      };
+      return {
+        ...prev,
+        suppliers: [...currentSuppliers, createdSupplier]
+      };
+    });
+    return createdSupplier;
+  }, [queryClient]);
+
+  const updateSupplier = useCallback(async (supplierId, updates) => {
+    if (USE_SUPABASE) {
+      const updated = await updateSupplierInDb({ id: supplierId, updates });
+      await queryClient.invalidateQueries({ queryKey: ['suppliers'] });
+      return updated;
+    }
+
+    setData(prev => ({
+      ...prev,
+      suppliers: (prev.suppliers ?? seedSuppliers).map(s =>
+        Number(s.id) === Number(supplierId) ? { ...s, ...updates } : s
+      )
     }));
   }, [queryClient]);
 
@@ -617,7 +699,7 @@ export function AppDataProvider({ children }) {
     }
 
     const previousStock = Number(targetProduct.stock) || 0;
-    const isEntry = direction === 'ENTRADA';
+    const isEntry = direction === 'ENTRADA' || direction === 'entry';
     const signedQuantity = isEntry ? qty : -qty;
     const resultingStock = previousStock + signedQuantity;
     if (resultingStock < 0) {
@@ -807,6 +889,8 @@ export function AppDataProvider({ children }) {
     error: USE_SUPABASE ? (productsQuery.error || salesQuery.error) : null,
     retry: () => {
       productsQuery.refetch();
+      suppliersQuery.refetch();
+      purchasesQuery.refetch();
       salesQuery.refetch();
       accountsQuery.refetch();
       moneyMovementsQuery.refetch();
@@ -819,6 +903,8 @@ export function AppDataProvider({ children }) {
   const value = {
     ...data,
     products,
+    suppliers,
+    purchases,
     sales,
     accounts,
     moneyMovements,
@@ -834,6 +920,8 @@ export function AppDataProvider({ children }) {
     addSale,
     addProduct,
     updateProduct,
+    addSupplier,
+    updateSupplier,
     adjustStock,
     addReconciliation,
     transferBetweenAccounts,
