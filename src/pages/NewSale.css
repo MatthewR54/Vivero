@@ -86,6 +86,24 @@
   align-items: start;
 }
 
+.ns-catalog-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ns-merch-quoter-trigger {
+  background: #f3e8ff !important;
+  color: #6b21a8 !important;
+  border: 1px solid #d8b4fe !important;
+  font-weight: 600;
+}
+
+.ns-merch-quoter-trigger:hover {
+  background: #e9d5ff !important;
+}
+
 /* Search Row */
 .ns-search-row {
   display: flex;
@@ -128,11 +146,34 @@
   background: var(--surface);
 }
 
+.ns-product-card-merch {
+  border-color: #d8b4fe;
+  background: #faf5ff;
+}
+
+.ns-product-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.ns-merch-pill {
+  font-size: 10px;
+  font-weight: 700;
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #d8b4fe;
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
 .ns-product-name {
   font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
 }
 
 .ns-product-price {
@@ -158,18 +199,36 @@
   margin-bottom: 8px;
 }
 
+.ns-product-card-actions {
+  display: flex;
+  gap: 6px;
+}
+
 .ns-add-btn {
   background: var(--green-soft) !important;
   color: var(--green-primary) !important;
   border: 1px solid var(--green-accent) !important;
-  width: 100%;
+  flex: 1;
 }
 
 .ns-add-btn:hover {
   background: #d1fae5 !important;
 }
 
-.ns-add-btn:disabled {
+.ns-customize-btn {
+  background: #f3e8ff !important;
+  color: #6b21a8 !important;
+  border: 1px solid #c084fc !important;
+  flex: 1;
+  font-weight: 600;
+}
+
+.ns-customize-btn:hover {
+  background: #e9d5ff !important;
+}
+
+.ns-add-btn:disabled,
+.ns-customize-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
@@ -208,18 +267,26 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 0;
+  padding: 10px 8px;
   border-bottom: 1px solid var(--border);
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .ns-cart-item:last-child {
   border-bottom: none;
 }
 
+.ns-cart-item-custom {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+}
+
 .ns-cart-item-info {
   flex: 1;
-  min-width: 0;
+  min-width: 180px;
 }
 
 .ns-cart-item-qty {
@@ -230,6 +297,62 @@
 
 .ns-cart-item-name {
   font-size: 13px;
+  font-weight: 600;
+}
+
+.ns-custom-badge {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  background: #f3e8ff;
+  color: #7e22ce;
+  border: 1px solid #d8b4fe;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.ns-cart-custom-details {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+.ns-cart-custom-finance {
+  margin-top: 2px;
+  color: #475569;
+}
+
+.ns-profit-tag {
+  color: var(--green-primary);
+  font-weight: 700;
+}
+
+.ns-cart-price-edit {
+  display: flex;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0 6px;
+  height: 30px;
+}
+
+.ns-price-prefix {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.ns-unit-price-input {
+  width: 78px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  outline: none;
 }
 
 .ns-cart-item-controls {
@@ -267,10 +390,11 @@
   white-space: nowrap;
 }
 
-/* Payment Methods */
+/* Payment Methods, Channel & Discount */
 .ns-payment-methods {
   display: flex;
   gap: 8px;
+  margin-bottom: 12px;
 }
 
 .ns-pay-btn {
@@ -294,6 +418,12 @@
 
 .ns-pay-btn:hover:not(.active) {
   background: var(--background-secondary);
+}
+
+.ns-channel-discount-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
 }
 
 /* Total Box */
@@ -322,6 +452,13 @@
   font-size: 28px;
   font-weight: 700;
   color: var(--green-dark);
+}
+
+.ns-subtotal-breakdown {
+  font-size: 12px;
+  color: var(--green-primary);
+  font-weight: 600;
+  margin-top: 3px;
 }
 
 .ns-total-right {
@@ -360,6 +497,60 @@
   gap: var(--space-base);
 }
 
+/* ===== MERCHANDISING CUSTOMIZER MODAL (RF-51 a RF-60) ===== */
+.ns-merch-modal {
+  max-width: 720px;
+  width: 95vw;
+}
+
+.ns-merch-summary-banner {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  background: #faf5ff;
+  border: 1px solid #d8b4fe;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.ns-merch-banner-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #6b21a8;
+  display: block;
+}
+
+.ns-merch-banner-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 2px 0;
+}
+
+.ns-merch-banner-val.positive {
+  color: var(--green-primary);
+}
+
+.ns-merch-banner-val.negative {
+  color: var(--danger);
+}
+
+.ns-merch-banner-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ns-merch-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.ns-col-span-2 {
+  grid-column: span 2;
+}
+
 @media (max-width: 1199px) {
   .ns-two-col {
     grid-template-columns: 1fr;
@@ -377,8 +568,15 @@
     gap: 8px;
   }
 
-  .ns-form-grid {
+  .ns-form-grid,
+  .ns-channel-discount-row,
+  .ns-merch-form-grid,
+  .ns-merch-summary-banner {
     grid-template-columns: 1fr;
+  }
+
+  .ns-col-span-2 {
+    grid-column: span 1;
   }
 
   .ns-products-grid {

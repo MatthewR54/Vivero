@@ -38,6 +38,35 @@
   min-width: 170px;
 }
 
+.sales-merch-history-btn {
+  background: #faf5ff !important;
+  color: #6b21a8 !important;
+  border: 1px solid #d8b4fe !important;
+}
+
+.sales-merch-history-btn:hover {
+  background: #f3e8ff !important;
+}
+
+.sales-channel-pill {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+}
+
+.sales-channel-pill.presencial {
+  background: var(--green-soft);
+  color: var(--green-primary);
+}
+
+.sales-channel-pill.virtual {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
 .sale-id {
   color: var(--green-primary);
   font-weight: 700;
@@ -70,7 +99,7 @@
 
 /* ===== TICKET MODAL ===== */
 .ticket-modal {
-  max-width: 480px;
+  max-width: 500px;
 }
 
 .ticket-row {
@@ -103,11 +132,27 @@
   margin-bottom: 8px;
 }
 
+.ticket-item-block {
+  margin-bottom: 6px;
+}
+
 .ticket-item-row {
   display: flex;
   justify-content: space-between;
   font-size: 13px;
   padding: 4px 0;
+  gap: 12px;
+}
+
+.ticket-custom-spec {
+  font-size: 11px;
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  color: #581c87;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-top: 2px;
+  line-height: 1.35;
 }
 
 .ticket-total-row {
@@ -139,11 +184,75 @@
   flex-shrink: 0;
 }
 
+/* ===== MERCHANDISING HISTORY MODAL (RF-59, RF-60, RF-129) ===== */
+.sales-merch-modal {
+  max-width: 960px;
+  width: 95vw;
+}
+
+.sales-merch-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sales-merch-stat-box {
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+
+.sales-merch-stat-box span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+}
+
+.sales-merch-stat-box strong {
+  font-size: 17px;
+  color: var(--text-primary);
+}
+
+.sales-merch-stat-box.highlight {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.sales-merch-stat-box.highlight strong {
+  color: var(--green-primary);
+}
+
+.sales-merch-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sales-merch-units-badge {
+  display: inline-block;
+  margin-top: 2px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #f3e8ff;
+  color: #6b21a8;
+  padding: 1px 8px;
+  border-radius: 999px;
+}
+
 @media (max-width: 767px) {
   .sales-search {
     min-width: 100%;
   }
   .sales-filter-right {
     width: 100%;
+  }
+  .sales-merch-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }

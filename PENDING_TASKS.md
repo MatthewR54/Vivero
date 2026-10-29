@@ -138,19 +138,15 @@ pie title Distribución de Tareas Inmediatas por Módulo
 
 ---
 
-## 🎨 7. Cotizador de Merchandising Personalizado
-*Actualmente se puede registrar un producto tipo "merchandising", pero sin costeo variable de personalización ([RF-51 a RF-60](docs/requisitos.md#L130-L163)).*
+## 🎨 7. Cotizador de Merchandising Personalizado — ✅ Completado
+*La calculadora interactiva de personalización, fijación de precio final, cálculo de costos y ganancias proyectadas, registro de especificaciones en el comprobante e historial de merchandising personalizado ([RF-51 a RF-60](docs/requisitos.md#L130-L163), [RF-64](docs/requisitos.md#L172), [RF-65](docs/requisitos.md#L174), [RF-68](docs/requisitos.md#L180), [RF-129](docs/requisitos.md#L326)) están implementados y conectados con Supabase (`custom_merch_orders`, `sales`, `sale_items`).*
 
-- [ ] **7.1. Calculadora de Personalización en Nueva Venta o Modal Especial ([RF-53 a RF-57](docs/requisitos.md#L137-L146))**
-  - **Archivos:** [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx)
-  - **Acción:** Al seleccionar una prenda o artículo personalizable:
-    - Campo de costo base de la prenda (ej. $25.000).
-    - Campo de costo de personalización/estampado (ej. $10.000).
-    - Costo total calculado ($35.000).
-    - Input de precio de venta final pactado con el cliente (ej. $50.000).
-    - Cálculo visual de la ganancia proyectada ($15.000) y margen (30%).
-- [ ] **7.2. Registro de Especificaciones en el Comprobante ([RF-58](docs/requisitos.md#L147), [RF-60](docs/requisitos.md#L151))**
-  - **Acción:** Guardar en el ticket los detalles específicos (ej. "Talla M, Logo Comunitario en pecho").
+- [x] **7.1. Calculadora de Personalización en Nueva Venta ([RF-51 a RF-59](docs/requisitos.md#L133-L149))**
+  - **Archivos:** [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx), [`src/pages/NewSale.css`](src/pages/NewSale.css)
+  - **Acción:** Modal *Cotizador de Merchandising Personalizado* (accesible desde cada prenda o desde la cabecera del catálogo) con selector de prenda base, unidades ([RF-58](docs/requisitos.md#L147)), talla, color, técnica, costo base, costo adicional de personalización ([RF-54](docs/requisitos.md#L139)), costo total calculado ([RF-56](docs/requisitos.md#L143)), precio de venta final editable ([RF-55](docs/requisitos.md#L141)) y ganancia/margen estimado ([RF-57](docs/requisitos.md#L145)), además de edición directa de precio unitario en el carrito ([RF-65](docs/requisitos.md#L174)), descuento ([RF-64](docs/requisitos.md#L172)) y canal presencial/virtual ([RF-68](docs/requisitos.md#L180)).
+- [x] **7.2. Registro de Especificaciones en el Comprobante e Historial ([RF-58](docs/requisitos.md#L147), [RF-59](docs/requisitos.md#L149), [RF-60](docs/requisitos.md#L151), [RF-129](docs/requisitos.md#L326))**
+  - **Archivos:** [`src/services/salesService.js`](src/services/salesService.js), [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/pages/Sales.jsx`](src/pages/Sales.jsx), [`src/pages/Sales.css`](src/pages/Sales.css)
+  - **Acción:** Persistencia en `public.custom_merch_orders` y visualización de las especificaciones de diseño en el Ticket de venta y en el modal *Historial y Costeo de Merchandising Personalizado* en `/ventas` con exportación a CSV ([RF-129](docs/requisitos.md#L326)).
 
 ---
 

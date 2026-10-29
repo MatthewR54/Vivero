@@ -314,10 +314,13 @@ export const seedSales = [
       name: 'Carlos Mendoza'
     },
     items: [
-      { productId: 'PRD-001', name: 'Cereal', quantity: 2, unitPrice: 30000, subtotal: 60000 },
-      { productId: 'PRD-002', name: 'Coca Cola 500ml', quantity: 1, unitPrice: 3900, subtotal: 3900 }
+      { productId: 'PRD-001', name: 'Cereal', quantity: 2, unitPrice: 30000, unitCost: 21500, subtotal: 60000 },
+      { productId: 'PRD-002', name: 'Coca Cola 500ml', quantity: 1, unitPrice: 3900, unitCost: 2600, subtotal: 3900 }
     ],
     paymentMethod: 'Efectivo',
+    channel: 'PRESENCIAL',
+    discount: 0,
+    subtotal: 63900,
     total: 63900
   },
   {
@@ -329,9 +332,12 @@ export const seedSales = [
       name: 'Mariana Gómez'
     },
     items: [
-      { productId: 'VIV-014', name: 'Suculenta Echeveria', quantity: 3, unitPrice: 12000, subtotal: 36000 }
+      { productId: 'VIV-014', name: 'Suculenta Echeveria', quantity: 3, unitPrice: 12000, unitCost: 4200, subtotal: 36000 }
     ],
     paymentMethod: 'Nequi',
+    channel: 'VIRTUAL',
+    discount: 0,
+    subtotal: 36000,
     total: 36000
   },
   {
@@ -343,9 +349,32 @@ export const seedSales = [
       name: 'Andrés Felipe Rojas'
     },
     items: [
-      { productId: 'MER-009', name: 'Camiseta Merch Personalizada', quantity: 1, unitPrice: 55000, subtotal: 55000 }
+      {
+        productId: 'MER-009',
+        name: 'Camiseta Merch Personalizada [Talla M • Serigrafía Social: Logo Colibrí Comunitario]',
+        quantity: 1,
+        unitPrice: 55000,
+        unitCost: 37000,
+        subtotal: 55000,
+        customization: {
+          size: 'Talla M',
+          color: 'Blanco Natural',
+          technique: 'Serigrafía Social',
+          designNotes: 'Logo Colibrí Comunitario en pecho + frase labor social en espalda',
+          baseCost: 27000,
+          customCost: 10000,
+          totalUnitCost: 37000,
+          finalUnitPrice: 55000,
+          unitProfit: 18000,
+          totalProfit: 18000,
+          marginPercent: 32.7
+        }
+      }
     ],
     paymentMethod: 'Bancolombia',
+    channel: 'PRESENCIAL',
+    discount: 0,
+    subtotal: 55000,
     total: 55000
   },
   {
@@ -357,11 +386,39 @@ export const seedSales = [
       name: 'Consumidor Final'
     },
     items: [
-      { productId: 'PRD-003', name: 'Pan Bimbo', quantity: 1, unitPrice: 5200, subtotal: 5200 },
-      { productId: 'PRD-002', name: 'Coca Cola 500ml', quantity: 1, unitPrice: 3900, subtotal: 3900 }
+      { productId: 'PRD-003', name: 'Pan Bimbo', quantity: 1, unitPrice: 5200, unitCost: 3800, subtotal: 5200 },
+      { productId: 'PRD-002', name: 'Coca Cola 500ml', quantity: 1, unitPrice: 3900, unitCost: 2600, subtotal: 3900 }
     ],
     paymentMethod: 'Efectivo',
+    channel: 'PRESENCIAL',
+    discount: 0,
+    subtotal: 9100,
     total: 9100
+  }
+];
+
+export const seedCustomMerchOrders = [
+  {
+    id: 'cmo-seed-1',
+    saleId: 'VTA-1047',
+    baseProductId: 'MER-009',
+    productName: 'Camiseta Merch Personalizada',
+    customerName: 'Andrés Felipe Rojas',
+    units: 1,
+    baseCost: 27000,
+    customCost: 10000,
+    totalUnitCost: 37000,
+    finalUnitPrice: 55000,
+    totalSaleAmount: 55000,
+    unitProfit: 18000,
+    estimatedProfit: 18000,
+    marginPercent: 32.7,
+    size: 'Talla M',
+    color: 'Blanco Natural',
+    technique: 'Serigrafía Social',
+    designNotes: 'Logo Colibrí Comunitario en pecho + frase labor social en espalda',
+    status: 'ENTREGADO',
+    date: new Date().toISOString().split('T')[0]
   }
 ];
 

@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   seedProducts, seedSales, seedCustomers, seedTransactions,
   seedAlerts, seedStatistics, seedNextSaleId, seedNextProductId,
-  seedSuppliers, seedPurchases, seedProductionBatches
+  seedSuppliers, seedPurchases, seedProductionBatches, seedCustomMerchOrders
 } from '../data/seedData';
 import {
   getStockStatus,
@@ -20,7 +20,11 @@ import {
   createProduct as createProductDb,
   updateProduct as updateProductDb
 } from '../services/productsService';
-import { fetchSales, createSale as createSaleDb } from '../services/salesService';
+import {
+  fetchSales,
+  fetchCustomMerchOrders,
+  createSale as createSaleDb
+} from '../services/salesService';
 import {
   fetchAccounts,
   fetchMoneyMovements,
@@ -49,7 +53,8 @@ import {
 // FUENTE DE DATOS
 // - Con VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY configuradas:
 //   productos, proveedores, compras, ventas, cuentas, movimientos monetarios,
-//   conciliaciones, kardex de inventario y lotes de producción se leen y escriben en Supabase.
+//   conciliaciones, kardex de inventario, lotes de producción y pedidos de
+//   merchandising personalizado se leen y escriben en Supabase.
 // - Sin ellas: modo local con localStorage (comportamiento original),
 //   útil para trabajar en diseño sin credenciales.
 // ============================================================
@@ -122,6 +127,7 @@ const FALLBACK_INVENTORY_MOVEMENTS = seedProducts.map(p => ({
 }));
 
 const FALLBACK_PRODUCTION_BATCHES = seedProductionBatches;
+const FALLBACK_CUSTOM_MERCH_ORDERS = seedCustomMerchOrders;
 
 function loadFromStorage() {
   try {
@@ -143,6 +149,7 @@ function freshLocalData() {
     suppliers: seedSuppliers,
     purchases: seedPurchases,
     sales: seedSales,
+    customMerchOrders: FALLBACK_CUSTOM_MERCH_ORDERS,
     customers: seedCustomers,
     transactions: seedTransactions,
     alerts: seedAlerts,
@@ -232,8 +239,10 @@ function applySaleToSummary(prev, sale, productsAfterSale) {
 
 function deductStock(products, items) {
   return products.map(p => {
-    const item = items.find(i => i.productId === p.id);
-    return item ? { ...p, stock: Math.max(0, p.stock - item.quantity) } : p;
+    const totalSold = items
+      .filter(i => i.productId === p.id)
+      .reduce((sum, i) => sum + Number(i.quantity || 0), 0);
+    return totalSold > 0 ? { ...p, stock: Math.max(0, p.stock - totalSold) } : p;
   });
 }
 
@@ -268,6 +277,12 @@ export function AppDataProvider({ children }) {
   const salesQuery = useQuery({
     queryKey: ['sales'],
     queryFn: fetchSales,
+    enabled: USE_SUPABASE
+  });
+
+  const customMerchOrdersQuery = useQuery({
+    queryKey: ['customMerchOrders'],
+    queryFn: fetchCustomMerchOrders,
     enabled: USE_SUPABASE
   });
 
@@ -317,6 +332,61 @@ export function AppDataProvider({ children }) {
     () => (USE_SUPABASE ? salesQuery.data ?? [] : data.sales),
     [salesQuery.data, data.sales]
   );
+
+  // RF-59 y RF-60: Historial de productos personalizados vendidos (combina custom_merch_orders + ítems MER en ventas)
+  const customMerchOrders = useMemo(() => {
+    const baseList = USE_SUPABASE
+      ? (customMerchOrdersQuery.data ?? [])
+      : (data.customMerchOrders ?? FALLBACK_CUSTOM_MERCH_ORDERS);
+
+    const existingSaleIds = new Set(baseList.map(o => o.saleId).filter(Boolean));
+    const derivedFromSales = [];
+
+    for (const s of sales) {
+      if (existingSaleIds.has(s.id)) continue;
+      for (const item of s.items ?? []) {
+        if (item.customization || String(item.productId || '').startsWith('MER')) {
+          const cust = item.customization || {};
+          const units = Number(item.quantity) || 1;
+          const finalUnitPrice = Number(item.unitPrice) || 0;
+          const baseCost = Number(cust.baseCost ?? item.unitCost ?? 27000);
+          const customCost = Number(cust.customCost ?? (finalUnitPrice > 45000 ? 10000 : 0));
+          const totalUnitCost = Number(cust.totalUnitCost ?? (baseCost + customCost));
+          const unitProfit = finalUnitPrice - totalUnitCost;
+          const estimatedProfit = unitProfit * units;
+          const marginPercent = finalUnitPrice > 0
+            ? Math.round((unitProfit / finalUnitPrice) * 1000) / 10
+            : 0;
+
+          derivedFromSales.push({
+            id: `cmo-${s.id}-${item.productId}`,
+            saleId: s.id,
+            baseProductId: item.productId,
+            productName: item.baseName || item.name.split(' [')[0],
+            customerName: s.customer?.name || 'Consumidor Final',
+            units,
+            baseCost,
+            customCost,
+            totalUnitCost,
+            finalUnitPrice,
+            totalSaleAmount: finalUnitPrice * units,
+            unitProfit,
+            estimatedProfit,
+            marginPercent,
+            size: cust.size || 'Talla M',
+            color: cust.color || 'Blanco Natural',
+            technique: cust.technique || 'Serigrafía Social',
+            designNotes: cust.designNotes || (item.name.includes('[') ? item.name.slice(item.name.indexOf('[') + 1, -1) : 'Personalización comunitaria'),
+            status: 'ENTREGADO',
+            date: s.date
+          });
+        }
+      }
+    }
+
+    return [...baseList, ...derivedFromSales];
+  }, [customMerchOrdersQuery.data, data.customMerchOrders, sales]);
+
   const accounts = useMemo(
     () => (USE_SUPABASE ? accountsQuery.data ?? FALLBACK_ACCOUNTS : (data.accounts ?? FALLBACK_ACCOUNTS)),
     [accountsQuery.data, data.accounts]
@@ -475,12 +545,16 @@ export function AppDataProvider({ children }) {
         time: result.time,
         items: saleData.items,
         paymentMethod: saleData.paymentMethod,
+        channel: saleData.channel || 'PRESENCIAL',
+        discount: Number(result.discount ?? saleData.discount ?? 0),
+        subtotal: Number(result.subtotal ?? saleData.subtotal ?? saleData.total),
         total: Number(result.total)
       };
       setData(prev => applySaleToSummary(prev, sale, deductStock(products, saleData.items)));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['products'] }),
         queryClient.invalidateQueries({ queryKey: ['sales'] }),
+        queryClient.invalidateQueries({ queryKey: ['customMerchOrders'] }),
         queryClient.invalidateQueries({ queryKey: ['accounts'] }),
         queryClient.invalidateQueries({ queryKey: ['moneyMovements'] }),
         queryClient.invalidateQueries({ queryKey: ['inventoryMovements'] })
@@ -494,6 +568,10 @@ export function AppDataProvider({ children }) {
     const nowTime = getCurrentTime();
     setData(prev => {
       const newProducts = deductStock(prev.products, saleData.items);
+      const subtotal = saleData.items.reduce((sum, it) => sum + Number(it.subtotal || 0), 0);
+      const discount = Math.max(0, Number(saleData.discount) || 0);
+      const finalTotal = Math.max(0, subtotal - discount);
+
       const newSale = {
         id: saleId,
         date: today,
@@ -501,8 +579,51 @@ export function AppDataProvider({ children }) {
         customer: saleData.customer,
         items: saleData.items,
         paymentMethod: saleData.paymentMethod,
-        total: saleData.total
+        channel: saleData.channel || 'PRESENCIAL',
+        subtotal,
+        discount,
+        total: finalTotal
       };
+
+      const newCustomOrders = (saleData.items ?? [])
+        .filter(it => Boolean(it.customization))
+        .map((it, idx) => {
+          const cust = it.customization;
+          const units = Number(it.quantity) || 1;
+          const baseCost = Number(cust.baseCost) || 0;
+          const customCost = Number(cust.customCost) || 0;
+          const totalUnitCost = Number(cust.totalUnitCost ?? (baseCost + customCost));
+          const finalUnitPrice = Number(it.unitPrice) || 0;
+          const unitProfit = finalUnitPrice - totalUnitCost;
+          const estimatedProfit = unitProfit * units;
+          const marginPercent = finalUnitPrice > 0
+            ? Math.round((unitProfit / finalUnitPrice) * 1000) / 10
+            : 0;
+
+          return {
+            id: `cmo-${saleId}-${idx}`,
+            saleId,
+            baseProductId: it.productId,
+            productName: it.baseName || it.name.split(' [')[0],
+            customerName: saleData.customer?.name || 'Consumidor Final',
+            units,
+            baseCost,
+            customCost,
+            totalUnitCost,
+            finalUnitPrice,
+            totalSaleAmount: finalUnitPrice * units,
+            unitProfit,
+            estimatedProfit,
+            marginPercent,
+            size: cust.size || 'Estándar',
+            color: cust.color || '',
+            technique: cust.technique || 'Personalización Social',
+            designNotes: cust.designNotes || '',
+            status: 'ENTREGADO',
+            date: today
+          };
+        });
+
       const saleMovements = saleData.items.map((item, idx) => {
         const prodBefore = prev.products.find(p => p.id === item.productId);
         const prevStock = prodBefore?.stock ?? 0;
@@ -527,6 +648,10 @@ export function AppDataProvider({ children }) {
         ...applySaleToSummary(prev, newSale, newProducts),
         products: newProducts,
         sales: [newSale, ...prev.sales],
+        customMerchOrders: [
+          ...newCustomOrders,
+          ...(prev.customMerchOrders ?? FALLBACK_CUSTOM_MERCH_ORDERS)
+        ],
         inventoryMovements: [...saleMovements, ...(prev.inventoryMovements ?? FALLBACK_INVENTORY_MOVEMENTS)],
         nextSaleId: prev.nextSaleId + 1
       };
@@ -1366,6 +1491,7 @@ export function AppDataProvider({ children }) {
       suppliersQuery.refetch();
       purchasesQuery.refetch();
       salesQuery.refetch();
+      customMerchOrdersQuery.refetch();
       accountsQuery.refetch();
       moneyMovementsQuery.refetch();
       reconciliationsQuery.refetch();
@@ -1380,6 +1506,7 @@ export function AppDataProvider({ children }) {
     suppliers,
     purchases,
     sales,
+    customMerchOrders,
     accounts,
     moneyMovements,
     reconciliations,

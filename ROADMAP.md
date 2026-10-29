@@ -10,18 +10,18 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados" : 100
-    "En Progreso / Parciales" : 10
+    "Completados" : 114
+    "En Progreso / Parciales" : 6
     "Simulados (Play-Pretend / Fijos)" : 1
-    "No Iniciados (Falta Módulo)" : 37
+    "No Iniciados (Falta Módulo)" : 27
 ```
 
 ### Principales Simulaciones a Eliminar:
-1. ~~**Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-37).~~ ✅ Productos, ventas, cuentas, movimientos de dinero, movimientos de inventario (Kardex), conciliaciones y lotes se leen de Supabase (ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)). `localStorage` queda solo como modo local sin credenciales.
+1. ~~**Persistencia en Navegador:** Datos almacenados en `localStorage` con límite de ~5 MB; si se borran cookies o se abre desde otro dispositivo, los datos no existen (RNF-15, RNF-37).~~ ✅ Productos, ventas, cuentas, movimientos de dinero, movimientos de inventario (Kardex), conciliaciones, lotes y pedidos personalizados se leen de Supabase (ver [`docs/conexion_base_datos.md`](docs/conexion_base_datos.md)). `localStorage` queda solo como modo local sin credenciales.
 2. ~~**Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).~~ ✅ KPIs, alertas de stock, lotes activos y transacciones del Panel ahora se calculan en tiempo real desde la base de datos.
 3. ~~**Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) muestra "$0.00 Diferencia (Cuadrado)" sin permitir ingresar el conteo físico de dinero real ni registrar justificaciones (RF-102 a RF-104).~~ ✅ Modal interactivo de Arqueo y Conciliación (con cálculo de faltante/sobrante, justificación obligatoria, ajuste automático de cuenta, traslado entre cuentas e historial de conciliaciones) implementado y conectado a Supabase.
 4. ~~**Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.~~ ✅ Los filtros de período en el Panel, en Estadísticas y en el Kardex de Inventario filtran registros reales por fecha.
-5. ~~**Módulos Faltantes:** Proveedores, Compras y Producción Propia de Plantas aún no tienen pantallas dedicadas en el frontend (sus tablas ya existen en Supabase).~~ ✅ Implementadas las vistas dedicadas `/proveedores`, `/compras`, `/compras/nueva` y `/produccion` conectadas con Supabase y modo local.
+5. ~~**Módulos Faltantes:** Proveedores, Compras y Producción Propia de Plantas aún no tienen pantallas dedicadas en el frontend (sus tablas ya existen en Supabase).~~ ✅ Implementadas las vistas dedicadas `/proveedores`, `/compras`, `/compras/nueva` y `/produccion`, más el Cotizador e Historial de Merchandising Personalizado en `/ventas/nueva` y `/ventas`.
 
 ---
 
@@ -40,7 +40,7 @@ gantt
     Kardex de Inventario & Ajustes         :done, s2_3, after s2_2, 3d
     section Sprint 3: Procesos Especializados
     Producción Propia de Plantas           :done, s3_1, 2026-10-29, 4d
-    Merchandising Personalizado            :s3_2, after s3_1, 3d
+    Merchandising Personalizado            :done, s3_2, after s3_1, 3d
     section Sprint 4: Tesorería & Cierre
     Cuentas, Arqueo y Conciliación         :done, s4_1, 2026-11-05, 3d
     Dashboard Dinámico & Reportes          :done, s4_2, after s4_1, 2d
@@ -93,12 +93,12 @@ gantt
   - ~~Transición de estados: *En producción* → *En crecimiento* → *Disponible para venta*.~~ ✅ Botones rápidos de transición y modal de seguimiento biológico/climático.
   - ~~Acción de cierre de lote: cálculo del costo unitario real y traspaso automático al catálogo de venta.~~ ✅ Modal *Declarar Disponible* que calcula el costo unitario real, suma las plantas al inventario (o crea un producto nuevo de vivero) y registra `ENTRADA_PRODUCCION` en el Kardex.
   - ~~Alerta de lotes con tiempo excedido o condiciones climáticas adversas (RF-43, RF-50).~~ ✅ Detección automática de lotes con fecha estimada vencida, badge de advertencia y alerta dinámica en el Panel.
-- [ ] **Merchandising Personalizado (RF-51 a RF-60):**
-  - Vista/Cotizador de personalizaciones comunitarias:
-    - Selección de producto base (ej. camiseta, maceta artesanal).
-    - Adición de costos de materiales extras y mano de obra.
-    - Fijación de precio final y cálculo automático del margen de ganancia proyectado.
-  - Registro del pedido en el historial de productos personalizados vendidos.
+- [x] **Merchandising Personalizado (RF-51 a RF-60):**
+  - ~~Vista/Cotizador de personalizaciones comunitarias:~~ ✅ Implementado en [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx) y conectado a `public.custom_merch_orders` vía [`src/services/salesService.js`](src/services/salesService.js):
+    - Selección de producto base (camiseta, prenda o artesanía) y cantidad de unidades (`RF-58`).
+    - Adición de costos de materiales extras, estampado/serigrafía y mano de obra (`RF-54`, `RF-56`).
+    - Fijación de precio final y cálculo automático de la ganancia y margen proyectado (`RF-55`, `RF-57`).
+  - ~~Registro del pedido en el historial de productos personalizados vendidos.~~ ✅ Especificaciones visibles en el Ticket de venta y en el modal *Historial y Costeo de Merchandising Personalizado* en [`src/pages/Sales.jsx`](src/pages/Sales.jsx) con exportación a CSV (`RF-59`, `RF-60`, `RF-129`).
 
 ---
 
@@ -117,7 +117,7 @@ gantt
   - ~~Hacer funcionales los botones de filtro temporal (*Hoy, Ayer, 7 días, Este Mes*).~~ ✅ Conectados en Dashboard y Estadísticas.
   - ~~Gráfico dinámico de ingresos vs. egresos con datos reales de la base de datos.~~ ✅ Conectado en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx).
 - [ ] **Reportes y Exportación (RF-123 a RF-138):**
-  - Exportación en CSV de reportes de inventario, compras, costos de producción, conciliaciones y ventas.
+  - Exportación en CSV de reportes de inventario, compras, costos de producción, productos personalizados, conciliaciones y ventas.
 - [ ] **Validación No Funcional & Entrega:**
   - Pruebas de diseño responsive en teléfonos inteligentes y tabletas (RNF-07 a RNF-10).
   - Verificación de copias de seguridad automáticas (RNF-25).
