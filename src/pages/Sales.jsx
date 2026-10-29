@@ -3,34 +3,67 @@ import { useNavigate } from 'react-router-dom';
 import { useAppData } from '../context/AppDataContext';
 import { formatCOP } from '../utils/currency';
 import { exportToCSV } from '../utils/exportCSV';
-import { getTodayString } from '../utils/calculations';
-import { Plus, Search, Download, X, FileText, Palette, Sparkles } from 'lucide-react';
+import { getTodayString, isDateInPeriod } from '../utils/calculations';
+import { Plus, Search, Download, X, FileText, Palette, Sparkles, Calendar, RotateCcw } from 'lucide-react';
 import colibriLogo from '../assets/colibri_logo.png';
 import './Sales.css';
 
 const PAYMENT_METHODS = ['Todos los métodos', 'Efectivo', 'Nequi', 'Bancolombia'];
+const PERIOD_FILTERS = ['Todo', 'Hoy', 'Últimos 7 días', 'Este Mes'];
 
 export default function Sales() {
   const { sales, customMerchOrders, showToast } = useAppData();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState('Todos los métodos');
+  const [periodFilter, setPeriodFilter] = useState('Todo');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [ticketModal, setTicketModal] = useState(null);
   const [merchHistoryOpen, setMerchHistoryOpen] = useState(false);
 
-  const filtered = sales.filter(sale => {
-    const q = search.trim().toLowerCase();
-    const matchSearch = !q ||
-      sale.id.toLowerCase().includes(q) ||
-      sale.customer.name.toLowerCase().includes(q) ||
-      (sale.customer.document && sale.customer.document.toLowerCase().includes(q)) ||
-      (sale.items && sale.items.some(i => i.name?.toLowerCase().includes(q)));
+  const filtered = useMemo(() => {
+    return sales.filter(sale => {
+      const q = search.trim().toLowerCase();
+      // RF-73: Búsqueda por comprobante, cliente, documento o producto contenido en la venta
+      const matchSearch = !q ||
+        sale.id.toLowerCase().includes(q) ||
+        sale.customer.name.toLowerCase().includes(q) ||
+        (sale.customer.document && sale.customer.document.toLowerCase().includes(q)) ||
+        (sale.items && sale.items.some(i =>
+          i.name?.toLowerCase().includes(q) ||
+          i.baseName?.toLowerCase().includes(q)
+        ));
 
-    const matchMethod = methodFilter === 'Todos los métodos' ||
-      sale.paymentMethod === methodFilter;
+      const matchMethod = methodFilter === 'Todos los métodos' ||
+        sale.paymentMethod === methodFilter;
 
-    return matchSearch && matchMethod;
-  });
+      // RF-72, RF-75: Filtro por período rápido o rango de fechas Desde / Hasta
+      const saleDate = String(sale.date || '').slice(0, 10);
+      const hasCustomRange = Boolean(dateFrom || dateTo);
+      const matchPeriod = hasCustomRange
+        ? (!dateFrom || saleDate >= dateFrom) && (!dateTo || saleDate <= dateTo)
+        : isDateInPeriod(saleDate, periodFilter);
+
+      return matchSearch && matchMethod && matchPeriod;
+    });
+  }, [sales, search, methodFilter, periodFilter, dateFrom, dateTo]);
+
+  const hasActiveFilters = Boolean(
+    search.trim() ||
+    methodFilter !== 'Todos los métodos' ||
+    periodFilter !== 'Todo' ||
+    dateFrom ||
+    dateTo
+  );
+
+  const handleClearFilters = () => {
+    setSearch('');
+    setMethodFilter('Todos los métodos');
+    setPeriodFilter('Todo');
+    setDateFrom('');
+    setDateTo('');
+  };
 
   const handleExport = () => {
     const headers = [
@@ -45,19 +78,38 @@ export default function Sales() {
       'Descuento (COP)',
       'Total (COP)'
     ];
-    const rows = filtered.map(s => [
-      s.id,
-      s.date,
-      s.time,
-      s.channel || 'PRESENCIAL',
-      s.customer.name,
-      s.customer.document || 'Sin datos',
-      s.items.map(i => `${i.quantity}× ${i.name}`).join(' | '),
-      s.paymentMethod,
-      s.discount || 0,
-      s.total
-    ]);
+    const totalDiscountSum = filtered.reduce((sum, s) => sum + (Number(s.discount) || 0), 0);
+    const totalAmountSum = filtered.reduce((sum, s) => sum + (Number(s.total) || 0), 0);
+    const rows = [
+      ...filtered.map(s => [
+        s.id,
+        s.date,
+        s.time,
+        s.channel || 'PRESENCIAL',
+        s.customer.name,
+        s.customer.document || 'Sin datos',
+        s.items.map(i => `${i.quantity}× ${i.name}`).join(' | '),
+        s.paymentMethod,
+        s.discount || 0,
+        s.total
+      ]),
+      [
+        'TOTAL CONSOLIDADO',
+        `${filtered.length} comprobantes`,
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        totalDiscountSum,
+        totalAmountSum
+      ]
+    ];
     exportToCSV(`ventas_vivero_colibri_${getTodayString()}.csv`, headers, rows);
+    if (showToast) {
+      showToast('Reporte de ventas con totales exportado a CSV', 'success');
+    }
   };
 
   // Exportar Reporte de Merchandising Personalizado (RF-129)
@@ -113,11 +165,30 @@ export default function Sales() {
     return { count: list.length, totalUnits, totalRevenue, totalCost, totalProfit };
   }, [customMerchOrders]);
 
-  const totalDayAmount = sales.reduce((sum, s) => sum + s.total, 0);
-  const avgTicket = sales.length > 0 ? Math.round(totalDayAmount / sales.length) : 0;
-  const avgProducts = sales.length > 0
-    ? (sales.reduce((sum, s) => sum + s.items.reduce((a, i) => a + i.quantity, 0), 0) / sales.length).toFixed(1)
+  const totalFilteredAmount = filtered.reduce((sum, s) => sum + s.total, 0);
+  const todayStr = getTodayString();
+  const todaySales = sales.filter(s => String(s.date || '').slice(0, 10) === todayStr);
+  const todayAmount = todaySales.reduce((sum, s) => sum + s.total, 0);
+  const avgTicket = filtered.length > 0 ? Math.round(totalFilteredAmount / filtered.length) : 0;
+  const avgProducts = filtered.length > 0
+    ? (filtered.reduce((sum, s) => sum + s.items.reduce((a, i) => a + i.quantity, 0), 0) / filtered.length).toFixed(1)
     : '0';
+
+  const topMethodInfo = useMemo(() => {
+    const source = filtered.length > 0 ? filtered : sales;
+    if (source.length === 0) return { label: 'Sin registros', share: 0 };
+    const totalsByMethod = {};
+    let grandTotal = 0;
+    source.forEach(s => {
+      const m = s.paymentMethod || 'Efectivo';
+      totalsByMethod[m] = (totalsByMethod[m] || 0) + (Number(s.total) || 0);
+      grandTotal += Number(s.total) || 0;
+    });
+    const sorted = Object.entries(totalsByMethod).sort((a, b) => b[1] - a[1]);
+    const [topMethod, topAmount] = sorted[0];
+    const share = grandTotal > 0 ? Math.round((topAmount / grandTotal) * 100) : 0;
+    return { label: topMethod, share };
+  }, [filtered, sales]);
 
   return (
     <div className="page-container">
@@ -142,9 +213,13 @@ export default function Sales() {
       {/* KPIs */}
       <div className="kpi-grid">
         <div className="kpi-card">
-          <div className="kpi-label">Ventas registradas</div>
-          <div className="kpi-value">{formatCOP(totalDayAmount)}</div>
-          <div className="kpi-sub">{sales.length} comprobantes emitidos</div>
+          <div className="kpi-label">
+            {hasActiveFilters ? 'Ventas filtradas' : 'Ventas registradas'}
+          </div>
+          <div className="kpi-value">{formatCOP(totalFilteredAmount)}</div>
+          <div className="kpi-sub">
+            {filtered.length} comprobante{filtered.length !== 1 ? 's' : ''} • Hoy: {formatCOP(todayAmount)} ({todaySales.length})
+          </div>
         </div>
         <div className="kpi-card">
           <div className="kpi-label">Ticket Promedio</div>
@@ -153,8 +228,8 @@ export default function Sales() {
         </div>
         <div className="kpi-card">
           <div className="kpi-label">Medio más usado</div>
-          <div className="kpi-value blue">Nequi / Transferencia</div>
-          <div className="kpi-sub">58% del volumen total</div>
+          <div className="kpi-value blue">{topMethodInfo.label}</div>
+          <div className="kpi-sub">{topMethodInfo.share}% del volumen consultado</div>
         </div>
         <div className="kpi-card">
           <div className="kpi-label">Merchandising Personalizado</div>
@@ -173,14 +248,29 @@ export default function Sales() {
             <input
               type="text"
               className="input-field"
-              placeholder="Buscar por # de comprobante, cliente, cédula o producto vendido..."
+              placeholder="Buscar por # de comprobante, cliente, cédula o producto vendido (RF-73)..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               aria-label="Buscar ventas"
             />
           </div>
           <div className="sales-filter-right">
-            <button className="chip active">Hoy</button>
+            <div className="chip-group">
+              {PERIOD_FILTERS.map(p => (
+                <button
+                  key={p}
+                  type="button"
+                  className={`chip ${!dateFrom && !dateTo && periodFilter === p ? 'active' : ''}`}
+                  onClick={() => {
+                    setPeriodFilter(p);
+                    setDateFrom('');
+                    setDateTo('');
+                  }}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
             <select
               className="input-field sales-method-select"
               value={methodFilter}
@@ -194,6 +284,49 @@ export default function Sales() {
             <button className="btn btn-dark" onClick={handleExport}>
               <Download size={14} /> Exportar
             </button>
+          </div>
+        </div>
+
+        {/* RF-72, RF-75: Filtro por rango de fechas Desde / Hasta */}
+        <div className="sales-date-range-bar">
+          <div className="sales-date-range-left">
+            <span className="sales-date-range-label">
+              <Calendar size={14} /> Consultar por fecha o período (RF-72, RF-75):
+            </span>
+            <div className="sales-date-field">
+              <label htmlFor="sales-date-from">Desde</label>
+              <input
+                id="sales-date-from"
+                type="date"
+                className="input-field sales-date-input"
+                value={dateFrom}
+                max={dateTo || undefined}
+                onChange={e => setDateFrom(e.target.value)}
+              />
+            </div>
+            <div className="sales-date-field">
+              <label htmlFor="sales-date-to">Hasta</label>
+              <input
+                id="sales-date-to"
+                type="date"
+                className="input-field sales-date-input"
+                value={dateTo}
+                min={dateFrom || undefined}
+                onChange={e => setDateTo(e.target.value)}
+              />
+            </div>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                className="btn btn-sm btn-ghost sales-clear-btn"
+                onClick={handleClearFilters}
+              >
+                <RotateCcw size={13} /> Limpiar filtros
+              </button>
+            )}
+          </div>
+          <div className="sales-date-range-count">
+            Mostrando <strong>{filtered.length}</strong> de {sales.length} ventas
           </div>
         </div>
 

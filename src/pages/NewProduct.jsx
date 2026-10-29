@@ -62,17 +62,44 @@ export default function NewProduct() {
   const handleSave = async () => {
     if (saving) return;
     const newErrors = {};
-    if (!form.name.trim()) newErrors.name = 'Nombre requerido';
-    if (!form.stock && form.stock !== 0) newErrors.stock = 'Stock requerido';
-    if (!form.cost) newErrors.cost = 'Costo requerido';
-    if (!form.price) newErrors.price = 'Precio requerido';
+    const trimmedName = form.name.trim();
+    const stockNum = Number(form.stock);
+    const minStockNum = Number(form.minStock);
+    const costNum = Number(form.cost);
+    const priceNum = Number(form.price);
+
+    // RNF-16, RNF-17: Validaciones estrictas de integridad y negocio
+    if (!trimmedName) {
+      newErrors.name = 'El nombre del producto es obligatorio';
+    } else if (trimmedName.length < 3) {
+      newErrors.name = 'El nombre debe tener al menos 3 caracteres';
+    }
+
+    if (form.stock === '' || form.stock === null || Number.isNaN(stockNum) || stockNum < 0 || !Number.isInteger(stockNum)) {
+      newErrors.stock = 'Ingresa una cantidad inicial entera mayor o igual a 0';
+    }
+
+    if (form.minStock === '' || form.minStock === null || Number.isNaN(minStockNum) || minStockNum < 0 || !Number.isInteger(minStockNum)) {
+      newErrors.minStock = 'El stock mínimo debe ser un número entero mayor o igual a 0';
+    }
+
+    if (form.cost === '' || form.cost === null || Number.isNaN(costNum) || costNum <= 0) {
+      newErrors.cost = 'El costo unitario debe ser mayor a $0 (RNF-16)';
+    }
+
+    if (form.price === '' || form.price === null || Number.isNaN(priceNum) || priceNum <= 0) {
+      newErrors.price = 'El precio de venta debe ser mayor a $0 (RNF-16)';
+    } else if (!Number.isNaN(costNum) && costNum > 0 && priceNum < costNum) {
+      newErrors.price = 'El precio de venta no puede ser inferior al costo unitario (RNF-17)';
+    }
+
     if (form.category === 'comestibles' && !form.supplierId && activeSuppliers.length > 0) {
       newErrors.supplierId = 'Selecciona el proveedor distribuidor para productos adquiridos';
     }
 
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
-      showToast('Completa los campos obligatorios', 'error');
+      showToast('Corrige los datos inválidos o incompletos antes de guardar', 'error');
       return;
     }
 
@@ -80,16 +107,16 @@ export default function NewProduct() {
     try {
       await addProduct({
         sku: autoSku,
-        name: form.name,
+        name: trimmedName,
         category: form.category,
         origin: selectedOrigin?.origin || '',
-        stock: parseInt(form.stock, 10),
-        minStock: parseInt(form.minStock, 10),
-        cost: parseInt(form.cost, 10),
-        price: parseInt(form.price, 10),
-        unit: form.unit,
-        location: form.location,
-        description: form.description,
+        stock: Math.round(stockNum),
+        minStock: Math.round(minStockNum),
+        cost: Math.round(costNum),
+        price: Math.round(priceNum),
+        unit: form.unit.trim() || 'Unidad',
+        location: form.location.trim(),
+        description: form.description.trim(),
         supplierId: form.supplierId ? Number(form.supplierId) : null
       });
 
@@ -212,6 +239,8 @@ export default function NewProduct() {
               <label>Cantidad Inicial Disponible *</label>
               <input
                 type="number"
+                min="0"
+                step="1"
                 className={`input-field ${errors.stock ? 'error' : ''}`}
                 value={form.stock}
                 onChange={e => handleChange('stock', e.target.value)}
@@ -224,11 +253,14 @@ export default function NewProduct() {
               <label>Stock Mínimo de Seguridad (Alerta) *</label>
               <input
                 type="number"
-                className="input-field np-minstock-input"
+                min="0"
+                step="1"
+                className={`input-field np-minstock-input ${errors.minStock ? 'error' : ''}`}
                 value={form.minStock}
                 onChange={e => handleChange('minStock', e.target.value)}
                 placeholder="5"
               />
+              {errors.minStock && <div className="input-error">{errors.minStock}</div>}
               <div className="input-hint" style={{ color: '#b45309' }}>Activa Alerta Naranja</div>
             </div>
 
@@ -266,6 +298,8 @@ export default function NewProduct() {
               <label>Costo Unitario de Producción / Compra *</label>
               <input
                 type="number"
+                min="1"
+                step="100"
                 className={`input-field ${errors.cost ? 'error' : ''}`}
                 value={form.cost}
                 onChange={e => handleChange('cost', e.target.value)}
@@ -278,6 +312,8 @@ export default function NewProduct() {
               <label>Precio de Venta Sugerido al Público *</label>
               <input
                 type="number"
+                min="1"
+                step="100"
                 className={`input-field np-price-input ${errors.price ? 'error' : ''}`}
                 value={form.price}
                 onChange={e => handleChange('price', e.target.value)}

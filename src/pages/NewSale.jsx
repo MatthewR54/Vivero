@@ -240,8 +240,16 @@ export default function NewSale() {
       showToast(`Stock insuficiente para ${targetProd.name} (Disponible: ${merchCalc.availableStock} uds)`, 'error');
       return;
     }
+    if (Number(merchForm.baseCost) <= 0) {
+      showToast('El costo de prenda base debe ser mayor a $0 (RNF-16)', 'error');
+      return;
+    }
+    if (Number(merchForm.customCost) < 0) {
+      showToast('El costo de personalización no puede ser negativo (RNF-16)', 'error');
+      return;
+    }
     if (merchCalc.finalUnitPrice <= 0) {
-      showToast('El precio final de venta debe ser mayor a $0', 'error');
+      showToast('El precio final de venta debe ser mayor a $0 (RNF-16)', 'error');
       return;
     }
     if (!merchForm.designNotes.trim()) {
@@ -373,14 +381,48 @@ export default function NewSale() {
   const handleConfirm = async () => {
     if (submitting) return;
     const newErrors = {};
-    if (cart.length === 0) newErrors.cart = 'Agrega al menos un producto a la venta';
-    if (!customer.name.trim()) newErrors.name = 'El nombre del cliente es obligatorio';
-    if (cart.some(c => c.unitPrice <= 0)) {
-      newErrors.cart = 'Todos los productos deben tener un precio de venta mayor a $0';
+
+    // RNF-16, RNF-17: Validaciones estrictas de negocio y formato de datos
+    if (cart.length === 0) {
+      newErrors.cart = 'Agrega al menos un producto a la venta';
+    } else if (cart.some(c => !c.unitPrice || Number(c.unitPrice) <= 0)) {
+      newErrors.cart = 'Todos los productos deben tener un precio unitario mayor a $0 (RNF-16)';
+    } else if (cartTotal <= 0) {
+      newErrors.cart = 'El total final de la venta debe ser mayor a $0';
     }
+
+    const trimmedName = customer.name.trim();
+    if (!trimmedName) {
+      newErrors.name = 'El nombre del cliente es obligatorio';
+    } else if (trimmedName.length < 3) {
+      newErrors.name = 'El nombre del cliente debe tener al menos 3 caracteres';
+    }
+
+    const trimmedDoc = customer.document.trim();
+    const docDigits = trimmedDoc.replace(/\D/g, '');
+    if (!trimmedDoc) {
+      newErrors.document = 'El documento o cédula del cliente es obligatorio';
+    } else if (!/^[0-9.\-\s]+$/.test(trimmedDoc) || docDigits.length < 5 || docDigits.length > 15) {
+      newErrors.document = 'Formato inválido: ingresa solo números (5 a 15 dígitos)';
+    }
+
+    const trimmedPhone = customer.phone.trim();
+    if (trimmedPhone) {
+      const phoneDigits = trimmedPhone.replace(/\D/g, '');
+      if (!/^[0-9+\-\s()]+$/.test(trimmedPhone) || phoneDigits.length < 7 || phoneDigits.length > 15) {
+        newErrors.phone = 'Teléfono inválido: ingresa un número válido (7 a 15 dígitos)';
+      }
+    }
+
+    const trimmedEmail = customer.email.trim();
+    if (trimmedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      newErrors.email = 'Ingresa un correo electrónico válido';
+    }
+
     if (paymentMethod === 'Efectivo' && receivedNum < cartTotal) {
       newErrors.received = 'El monto recibido en efectivo es insuficiente para cubrir el total';
     }
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       showToast('Revisa los campos marcados antes de emitir la venta', 'error');
@@ -552,13 +594,18 @@ export default function NewSale() {
                     <div className="ns-doc-input">
                       <input
                         type="text"
-                        className="input-field"
+                        inputMode="numeric"
+                        className={`input-field ${errors.document ? 'error' : ''}`}
                         value={customer.document}
-                        onChange={e => setCustomer({ ...customer, document: e.target.value })}
-                        placeholder="Número de documento"
+                        onChange={e => {
+                          setCustomer({ ...customer, document: e.target.value });
+                          if (errors.document) setErrors(prev => ({ ...prev, document: null }));
+                        }}
+                        placeholder="Ej: 1.114.890.342"
                       />
-                      {customer.document && <CircleCheck size={16} className="ns-check-icon" />}
+                      {customer.document && !errors.document && <CircleCheck size={16} className="ns-check-icon" />}
                     </div>
+                    {errors.document && <div className="input-error">{errors.document}</div>}
                   </div>
                   <div className="input-group">
                     <label>Nombre Completo *</label>
@@ -566,7 +613,10 @@ export default function NewSale() {
                       type="text"
                       className={`input-field ${errors.name ? 'error' : ''}`}
                       value={customer.name}
-                      onChange={e => setCustomer({ ...customer, name: e.target.value })}
+                      onChange={e => {
+                        setCustomer({ ...customer, name: e.target.value });
+                        if (errors.name) setErrors(prev => ({ ...prev, name: null }));
+                      }}
                       placeholder="Nombre del cliente"
                     />
                     {errors.name && <div className="input-error">{errors.name}</div>}
@@ -574,22 +624,31 @@ export default function NewSale() {
                   <div className="input-group">
                     <label>Teléfono / WhatsApp</label>
                     <input
-                      type="text"
-                      className="input-field"
+                      type="tel"
+                      inputMode="tel"
+                      className={`input-field ${errors.phone ? 'error' : ''}`}
                       value={customer.phone}
-                      onChange={e => setCustomer({ ...customer, phone: e.target.value })}
+                      onChange={e => {
+                        setCustomer({ ...customer, phone: e.target.value });
+                        if (errors.phone) setErrors(prev => ({ ...prev, phone: null }));
+                      }}
                       placeholder="+57 300 000 0000"
                     />
+                    {errors.phone && <div className="input-error">{errors.phone}</div>}
                   </div>
                   <div className="input-group">
                     <label>Correo Electrónico (Para factura)</label>
                     <input
                       type="email"
-                      className="input-field"
+                      className={`input-field ${errors.email ? 'error' : ''}`}
                       value={customer.email}
-                      onChange={e => setCustomer({ ...customer, email: e.target.value })}
+                      onChange={e => {
+                        setCustomer({ ...customer, email: e.target.value });
+                        if (errors.email) setErrors(prev => ({ ...prev, email: null }));
+                      }}
                       placeholder="email@ejemplo.com"
                     />
+                    {errors.email && <div className="input-error">{errors.email}</div>}
                   </div>
                 </div>
               </div>

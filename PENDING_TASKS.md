@@ -150,18 +150,18 @@ pie title Distribución de Tareas Inmediatas por Módulo
 
 ---
 
-## 📊 8. Búsquedas, Reportes y Validaciones Inmediatas
+## 📊 8. Búsquedas, Reportes y Validaciones Inmediatas — ✅ Completado
+*Los filtros de ventas por producto, período y rango de fechas ([RF-72](docs/requisitos.md#L188), [RF-73](docs/requisitos.md#L190), [RF-75](docs/requisitos.md#L194)), la exportación de reportes consolidados a CSV ([RF-123](docs/requisitos.md#L314), [RF-138](docs/requisitos.md#L344)) y las validaciones estrictas de negocio en formularios ([RNF-16](docs/requisitos.md#L409), [RNF-17](docs/requisitos.md#L412)) están implementados.*
 
-- [ ] **8.1. Búsqueda de Ventas por Producto y Filtro por Fecha ([RF-72](docs/requisitos.md#L188), [RF-73](docs/requisitos.md#L190), [RF-75](docs/requisitos.md#L194))**
-  - **Archivos:** [`src/pages/Sales.jsx`](src/pages/Sales.jsx)
-  - **Acción:** Ampliar el buscador actual para que coincida también si el texto digitado coincide con el nombre de algún producto contenido dentro de la venta, y añadir selectores de fecha `Desde` y `Hasta`.
+- [x] **8.1. Búsqueda de Ventas por Producto y Filtro por Fecha ([RF-72](docs/requisitos.md#L188), [RF-73](docs/requisitos.md#L190), [RF-75](docs/requisitos.md#L194))**
+  - **Archivos:** [`src/pages/Sales.jsx`](src/pages/Sales.jsx), [`src/pages/Sales.css`](src/pages/Sales.css)
+  - **Acción:** Buscador ampliado que filtra por comprobante, cliente, documento o nombre de producto vendido (`RF-73`), chips interactivos de período (*Todo*, *Hoy*, *Últimos 7 días*, *Este Mes*), selectores de rango `Desde` y `Hasta` (`RF-72`, `RF-75`), KPIs dinámicos y exportación a CSV con fila consolidada de totales (`RF-123`).
 - [x] **8.2. Exportar Reportes a CSV en Estadísticas ([RF-138](docs/requisitos.md#L344))**
   - **Archivos:** [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx), [`src/utils/exportCSV.js`](src/utils/exportCSV.js)
   - **Acción:** Conectar el botón "Exportar Reporte" con `exportToCSV` para descargar un archivo con el balance consolidado del período seleccionado.
-- [ ] **8.3. Validaciones de Negocio Estrictas ([RNF-16](docs/requisitos.md#L409), [RNF-17](docs/requisitos.md#L412))**
+- [x] **8.3. Validaciones de Negocio Estrictas ([RNF-16](docs/requisitos.md#L409), [RNF-17](docs/requisitos.md#L412))**
   - **Archivos:** [`src/pages/NewProduct.jsx`](src/pages/NewProduct.jsx), [`src/pages/NewSale.jsx`](src/pages/NewSale.jsx)
-  - **Acción:** Bloquear precios o costos negativos o iguales a cero, validar formato numérico de teléfono y número de documento del cliente.
-  - **Avance:** ✅ La BD ya rechaza cantidades, precios y descuentos inválidos en las ventas y recalcula los totales en el servidor. Faltan las validaciones en los formularios.
+  - **Acción:** Bloqueo de precios o costos negativos o iguales a cero, prevención de precios de venta inferiores al costo unitario, validación de formato numérico en documento y teléfono del cliente, y validación en servidor en la base de datos.
 
 ---
 

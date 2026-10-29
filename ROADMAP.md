@@ -10,10 +10,10 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados" : 114
-    "En Progreso / Parciales" : 6
+    "Completados" : 118
+    "En Progreso / Parciales" : 5
     "Simulados (Play-Pretend / Fijos)" : 1
-    "No Iniciados (Falta Módulo)" : 27
+    "No Iniciados (Falta Módulo)" : 24
 ```
 
 ### Principales Simulaciones a Eliminar:
@@ -116,8 +116,8 @@ gantt
   - ~~Conectar el Dashboard para que los KPIs reflejen ventas, ingresos y egresos del período en tiempo real.~~ ✅ Conectado en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).
   - ~~Hacer funcionales los botones de filtro temporal (*Hoy, Ayer, 7 días, Este Mes*).~~ ✅ Conectados en Dashboard y Estadísticas.
   - ~~Gráfico dinámico de ingresos vs. egresos con datos reales de la base de datos.~~ ✅ Conectado en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx).
-- [ ] **Reportes y Exportación (RF-123 a RF-138):**
-  - Exportación en CSV de reportes de inventario, compras, costos de producción, productos personalizados, conciliaciones y ventas.
+- [x] **Reportes y Exportación (RF-123 a RF-138):**
+  - ~~Exportación en CSV de reportes de inventario, compras, costos de producción, productos personalizados, conciliaciones y ventas.~~ ✅ Exportaciones CSV con totales consolidados activas en Inventario (catálogo y Kardex), Compras, Producción, Ventas (general y merchandising personalizado) y Estadísticas.
 - [ ] **Validación No Funcional & Entrega:**
   - Pruebas de diseño responsive en teléfonos inteligentes y tabletas (RNF-07 a RNF-10).
   - Verificación de copias de seguridad automáticas (RNF-25).
