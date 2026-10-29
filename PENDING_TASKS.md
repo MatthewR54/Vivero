@@ -117,20 +117,24 @@ pie title Distribución de Tareas Inmediatas por Módulo
 
 ---
 
-## 🌱 6. Lotes de Cultivo y Producción Propia de Plantas
-*Actualmente solo existe una alerta decorativa de ejemplo en el Dashboard ([RF-36 a RF-50](docs/requisitos.md#L87-L128)).*
+## 🌱 6. Lotes de Cultivo y Producción Propia de Plantas — ✅ Completado
+*El monitoreo biológico de lotes en cultivo, registro de insumos y costos acumulados, control de condiciones climáticas, alertas de tiempo excedido e incorporación de cosechas al inventario de venta ([RF-36 a RF-50](docs/requisitos.md#L87-L128), [RF-128](docs/requisitos.md#L324)) están implementados y conectados con Supabase (`production_batches`, `production_inputs`, `products`, `inventory_movements`).*
 
-- [ ] **6.1. Modelo y Estado de Lotes de Producción ([RF-36 a RF-40](docs/requisitos.md#L93-L102))**
-  - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/data/seedData.js`](src/data/seedData.js)
-  - **Acción:** Añadir array `productionBatches` con campos: `id`, `species`, `quantity`, `startDate`, `estimatedReadyDate`, `status` (*En producción*, *En crecimiento*, *Disponible para venta*), `accumulatedCost`, `notes`.
-- [ ] **6.2. Vista o Modal de Monitoreo de Cultivos ([RF-44](docs/requisitos.md#L109), [RF-49](docs/requisitos.md#L123))**
-  - **Archivos:** Crear `src/pages/Production.jsx` con tarjetas o tabla de los lotes en curso y sus etapas biológicas.
-- [ ] **6.3. Registro de Insumos y Costos Acumulados ([RF-41](docs/requisitos.md#L103), [RF-42](docs/requisitos.md#L105), [RF-48](docs/requisitos.md#L121))**
-  - **Acción:** Botón "Agregar Insumo" en el lote (ej. Tierra abonada, Macetas, Fertilizante orgánico) que incremente el costo acumulado del lote.
-- [ ] **6.4. Traspaso a Inventario de Venta ([RF-45](docs/requisitos.md#L115), [RF-46](docs/requisitos.md#L117), [RF-47](docs/requisitos.md#L119))**
-  - **Acción:** Botón "Declarar Disponible para Venta": calcula el costo unitario (`costo_acumulado / cantidad_final`) y suma las plantas al catálogo de inventario activo.
-- [ ] **6.5. Alerta de Producción Demorada ([RF-50](docs/requisitos.md#L125))**
-  - **Acción:** Evaluar si `fecha_actual > fecha_estimada` para mostrar badge de advertencia "Tiempo Excedido por Clima/Factores".
+- [x] **6.1. Modelo y Estado de Lotes de Producción ([RF-36 a RF-40](docs/requisitos.md#L93-L102))**
+  - **Archivos:** [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx), [`src/data/seedData.js`](src/data/seedData.js), [`src/services/financeService.js`](src/services/financeService.js)
+  - **Acción:** Datos semilla `seedProductionBatches` con historial de insumos, consultas y mutaciones (`fetchProductionBatches`, `createProductionBatch`, `updateProductionBatch`) en modo dual Supabase + `localStorage`.
+- [x] **6.2. Vista de Monitoreo de Cultivos (`/produccion`) ([RF-43](docs/requisitos.md#L107), [RF-44](docs/requisitos.md#L109), [RF-49](docs/requisitos.md#L123))**
+  - **Archivos:** [`src/pages/Production.jsx`](src/pages/Production.jsx), [`src/pages/Production.css`](src/pages/Production.css), [`src/App.jsx`](src/App.jsx), [`src/components/layout/Navbar.jsx`](src/components/layout/Navbar.jsx)
+  - **Acción:** Tabla y KPIs de lotes activos, transición de etapas biológicas (*En producción* → *En crecimiento* → *Disponible para venta*), registro de condiciones climáticas/factores y exportación de costos a CSV ([RF-128](docs/requisitos.md#L324)).
+- [x] **6.3. Registro de Insumos y Costos Acumulados ([RF-41](docs/requisitos.md#L103), [RF-42](docs/requisitos.md#L105), [RF-48](docs/requisitos.md#L121))**
+  - **Archivos:** [`src/pages/Production.jsx`](src/pages/Production.jsx), [`src/services/financeService.js`](src/services/financeService.js)
+  - **Acción:** Modal de *Insumos y Costos de Producción* por lote con plantillas rápidas (sustrato, macetas, fertilizante, mano de obra), bitácora histórica en `production_inputs` y actualización automática de `accumulated_cost`.
+- [x] **6.4. Traspaso a Inventario de Venta ([RF-45](docs/requisitos.md#L115), [RF-46](docs/requisitos.md#L117), [RF-47](docs/requisitos.md#L119))**
+  - **Archivos:** [`src/pages/Production.jsx`](src/pages/Production.jsx), [`src/services/financeService.js`](src/services/financeService.js), [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx)
+  - **Acción:** Modal *Declarar Disponible e Incorporar al Inventario* que calcula el costo unitario real (`costo_acumulado / cantidad_final`), suma las plantas a un producto existente (recalculando su costo promedio ponderado) o crea un nuevo producto de vivero, y registra el movimiento `ENTRADA_PRODUCCION` en el Kardex.
+- [x] **6.5. Alerta de Producción Demorada ([RF-50](docs/requisitos.md#L125))**
+  - **Archivos:** [`src/pages/Production.jsx`](src/pages/Production.jsx), [`src/context/AppDataContext.jsx`](src/context/AppDataContext.jsx)
+  - **Acción:** Evaluación automática de `fecha_actual > fecha_estimada` con badge de advertencia `"Tiempo Excedido (+X días)"`, pestaña de filtro dedicada en `/produccion` y alerta dinámica en el Panel de Inicio.
 
 ---
 

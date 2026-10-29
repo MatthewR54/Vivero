@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   seedProducts, seedSales, seedCustomers, seedTransactions,
   seedAlerts, seedStatistics, seedNextSaleId, seedNextProductId,
-  seedSuppliers, seedPurchases
+  seedSuppliers, seedPurchases, seedProductionBatches
 } from '../data/seedData';
 import {
   getStockStatus,
@@ -27,7 +27,11 @@ import {
   fetchReconciliations,
   fetchProductionBatches,
   createReconciliation as createReconciliationDb,
-  createAccountTransfer as createAccountTransferDb
+  createAccountTransfer as createAccountTransferDb,
+  createProductionBatch as createProductionBatchDb,
+  updateProductionBatch as updateProductionBatchDb,
+  addProductionInput as addProductionInputDb,
+  closeProductionBatch as closeProductionBatchDb
 } from '../services/financeService';
 import {
   fetchInventoryMovements,
@@ -117,36 +121,7 @@ const FALLBACK_INVENTORY_MOVEMENTS = seedProducts.map(p => ({
   createdAt: new Date().toISOString()
 }));
 
-const FALLBACK_PRODUCTION_BATCHES = [
-  {
-    id: 'lot-1',
-    batchCode: 'LOT-001',
-    targetProductId: 'VIV-022',
-    species: 'Orquídea Phalaenopsis Blanca',
-    initialQuantity: 50,
-    currentQuantity: 45,
-    startDate: '2026-09-21',
-    estimatedReadyDate: '2026-12-05',
-    actualReadyDate: null,
-    status: 'EN_CRECIMIENTO',
-    environmentalConditions: 'Zona sombra 70%, humedad 65%, riego por microaspersión cada 3 días',
-    accumulatedCost: 382500
-  },
-  {
-    id: 'lot-2',
-    batchCode: 'LOT-002',
-    targetProductId: 'VIV-014',
-    species: 'Suculenta Jade Enana',
-    initialQuantity: 60,
-    currentQuantity: 58,
-    startDate: '2026-10-06',
-    estimatedReadyDate: '2026-11-10',
-    actualReadyDate: null,
-    status: 'EN_PRODUCCION',
-    environmentalConditions: 'Exposición solar matutina 4 horas, sustrato mineral con perlita',
-    accumulatedCost: 145000
-  }
-];
+const FALLBACK_PRODUCTION_BATCHES = seedProductionBatches;
 
 function loadFromStorage() {
   try {
@@ -193,6 +168,18 @@ function deriveNextProductId(products) {
     if (category) next[category] = Math.max(next[category], Number(match[2]) + 1);
   }
   return next;
+}
+
+/** Siguiente código LOT-XXX calculado a partir de los lotes existentes. */
+function deriveNextBatchCode(batches) {
+  let maxNum = 0;
+  for (const b of batches || []) {
+    const match = /^LOT-(\d+)$/i.exec(b.batchCode ?? '');
+    if (match) {
+      maxNum = Math.max(maxNum, Number(match[1]));
+    }
+  }
+  return `LOT-${String(maxNum + 1).padStart(3, '0')}`;
 }
 
 /** Actualiza los datos de ejemplo del Dashboard/Estadísticas tras una venta. */
@@ -403,10 +390,11 @@ export function AppDataProvider({ children }) {
     }));
   }, [sales, moneyMovements, data.transactions, data.sales]);
 
-  // Genera alertas dinámicas evaluando stock actual de productos + lotes de cultivo activos (RF-32, RF-146, RF-147)
+  // Genera alertas dinámicas evaluando stock actual de productos + lotes de cultivo activos (RF-32, RF-50, RF-146, RF-147)
   const alerts = useMemo(() => {
     const dynamicAlerts = [];
     const supplierById = new Map(suppliers.map(s => [Number(s.id), s.name]));
+    const todayStr = getTodayString();
 
     for (const p of products) {
       if (!p.active) continue;
@@ -439,14 +427,27 @@ export function AppDataProvider({ children }) {
     for (const batch of productionBatches) {
       if (batch.status === 'DISPONIBLE' || batch.status === 'PERDIDA_TOTAL') continue;
       const statusLabel = batch.status === 'EN_CRECIMIENTO' ? 'En crecimiento' : 'En producción';
-      dynamicAlerts.push({
-        id: `batch-${batch.batchCode || batch.id}`,
-        type: 'success',
-        title: `Proceso de Cultivo Activo: Lote ${batch.batchCode} (${batch.species})`,
-        description: `${batch.currentQuantity} plantas en fase "${statusLabel}". Disponibilidad estimada: ${batch.estimatedReadyDate}.`,
-        action: 'Ver Catálogo',
-        route: '/inventario'
-      });
+      const isDelayed = Boolean(batch.estimatedReadyDate && todayStr > batch.estimatedReadyDate);
+
+      if (isDelayed) {
+        dynamicAlerts.push({
+          id: `batch-delay-${batch.batchCode || batch.id}`,
+          type: 'warning',
+          title: `Tiempo de Cultivo Excedido: Lote ${batch.batchCode} (${batch.species})`,
+          description: `Fecha estimada superada (${batch.estimatedReadyDate}). ${batch.currentQuantity} plantas en "${statusLabel}". ${batch.environmentalConditions ? `Factor: ${batch.environmentalConditions}` : ''}`,
+          action: 'Revisar Lote',
+          route: '/produccion'
+        });
+      } else {
+        dynamicAlerts.push({
+          id: `batch-${batch.batchCode || batch.id}`,
+          type: 'success',
+          title: `Proceso de Cultivo Activo: Lote ${batch.batchCode} (${batch.species})`,
+          description: `${batch.currentQuantity} plantas en fase "${statusLabel}". Disponibilidad estimada: ${batch.estimatedReadyDate}.`,
+          action: 'Ver Cultivo',
+          route: '/produccion'
+        });
+      }
     }
 
     return dynamicAlerts;
@@ -892,6 +893,319 @@ export function AppDataProvider({ children }) {
     return newMov;
   }, [products, queryClient]);
 
+  // ---------- Lotes de Cultivo y Producción Propia de Plantas (RF-36 a RF-50) ----------
+  const addProductionBatch = useCallback(async (batchData) => {
+    const batchCode = batchData.batchCode?.trim() || deriveNextBatchCode(productionBatches);
+
+    if (USE_SUPABASE) {
+      const created = await createProductionBatchDb({
+        ...batchData,
+        batchCode
+      });
+      await queryClient.invalidateQueries({ queryKey: ['productionBatches'] });
+      return created;
+    }
+
+    // Modo local (localStorage)
+    const cleanSpecies = (batchData.species ?? '').trim();
+    if (!cleanSpecies) {
+      throw new Error('La especie o nombre de la planta en producción es obligatoria');
+    }
+    const initQty = Math.floor(Number(batchData.initialQuantity));
+    if (!initQty || Number.isNaN(initQty) || initQty <= 0) {
+      throw new Error('La cantidad inicial de plantas debe ser mayor a 0');
+    }
+    if (!batchData.estimatedReadyDate) {
+      throw new Error('La fecha estimada de disponibilidad es obligatoria');
+    }
+
+    const start = batchData.startDate || getTodayString();
+    const initCost = Math.max(0, Number(batchData.initialCost) || 0);
+    const newId = `lot-${Date.now()}`;
+    const initialInputs = initCost > 0
+      ? [{
+          id: `inp-${Date.now()}`,
+          batchId: newId,
+          inputName: (batchData.initialInputName ?? '').trim() || 'Semillas / Esquejes y sustrato base inicial',
+          quantity: initQty,
+          unit: 'Plántula/Esqueje',
+          unitCost: Math.round((initCost / initQty) * 100) / 100,
+          totalCost: initCost,
+          applicationDate: start,
+          notes: 'Costo base de apertura del lote'
+        }]
+      : [];
+
+    const newBatch = {
+      id: newId,
+      batchCode,
+      targetProductId: batchData.targetProductId || null,
+      species: cleanSpecies,
+      initialQuantity: initQty,
+      currentQuantity: initQty,
+      startDate: start,
+      estimatedReadyDate: batchData.estimatedReadyDate,
+      actualReadyDate: null,
+      status: batchData.status || 'EN_PRODUCCION',
+      environmentalConditions: (batchData.environmentalConditions ?? '').trim(),
+      accumulatedCost: initCost,
+      inputs: initialInputs
+    };
+
+    setData(prev => ({
+      ...prev,
+      productionBatches: [newBatch, ...(prev.productionBatches ?? FALLBACK_PRODUCTION_BATCHES)]
+    }));
+
+    return newBatch;
+  }, [productionBatches, queryClient]);
+
+  const updateProductionBatch = useCallback(async (batchId, updates) => {
+    if (USE_SUPABASE) {
+      const updated = await updateProductionBatchDb({ id: batchId, updates });
+      await queryClient.invalidateQueries({ queryKey: ['productionBatches'] });
+      return updated;
+    }
+
+    setData(prev => ({
+      ...prev,
+      productionBatches: (prev.productionBatches ?? FALLBACK_PRODUCTION_BATCHES).map(b =>
+        b.id === batchId ? { ...b, ...updates } : b
+      )
+    }));
+  }, [queryClient]);
+
+  const addProductionInput = useCallback(async ({
+    batchId,
+    inputName,
+    quantity,
+    unit = 'Unidad',
+    unitCost,
+    applicationDate,
+    notes = ''
+  }) => {
+    const targetBatch = productionBatches.find(b => b.id === batchId);
+    if (!targetBatch) {
+      throw new Error('Lote de producción no encontrado');
+    }
+
+    if (USE_SUPABASE) {
+      const res = await addProductionInputDb({
+        batch: targetBatch,
+        inputName,
+        quantity,
+        unit,
+        unitCost,
+        applicationDate,
+        notes
+      });
+      await queryClient.invalidateQueries({ queryKey: ['productionBatches'] });
+      return res;
+    }
+
+    // Modo local (localStorage)
+    const cleanName = (inputName ?? '').trim();
+    if (!cleanName) {
+      throw new Error('El nombre o descripción del insumo es obligatorio');
+    }
+    const qty = Number(quantity);
+    if (Number.isNaN(qty) || qty <= 0) {
+      throw new Error('La cantidad del insumo debe ser mayor a 0');
+    }
+    const uCost = Number(unitCost);
+    if (Number.isNaN(uCost) || uCost < 0) {
+      throw new Error('El costo unitario del insumo no puede ser negativo');
+    }
+
+    const totalCost = Math.round(qty * uCost * 100) / 100;
+    const appDate = applicationDate || getTodayString();
+    const newInput = {
+      id: `inp-${Date.now()}`,
+      batchId,
+      inputName: cleanName,
+      quantity: qty,
+      unit: (unit ?? 'Unidad').trim() || 'Unidad',
+      unitCost: uCost,
+      totalCost,
+      applicationDate: appDate,
+      notes: (notes ?? '').trim()
+    };
+
+    setData(prev => ({
+      ...prev,
+      productionBatches: (prev.productionBatches ?? FALLBACK_PRODUCTION_BATCHES).map(b => {
+        if (b.id !== batchId) return b;
+        const currentInputs = Array.isArray(b.inputs) ? b.inputs : [];
+        return {
+          ...b,
+          accumulatedCost: Number(b.accumulatedCost || 0) + totalCost,
+          inputs: [newInput, ...currentInputs]
+        };
+      })
+    }));
+
+    return { input: newInput, newAccumulatedCost: Number(targetBatch.accumulatedCost || 0) + totalCost };
+  }, [productionBatches, queryClient]);
+
+  const closeProductionBatch = useCallback(async ({
+    batchId,
+    finalQuantity,
+    targetMode = 'existing',
+    targetProductId,
+    newProductData,
+    salePrice
+  }) => {
+    const targetBatch = productionBatches.find(b => b.id === batchId);
+    if (!targetBatch) {
+      throw new Error('Lote de producción no encontrado');
+    }
+
+    const finalQty = Math.floor(Number(finalQuantity));
+    if (!finalQty || Number.isNaN(finalQty) || finalQty <= 0) {
+      throw new Error('La cantidad final de plantas disponibles debe ser mayor a 0');
+    }
+
+    const targetProduct = targetMode === 'existing'
+      ? products.find(p => p.id === (targetProductId || targetBatch.targetProductId))
+      : null;
+
+    if (targetMode === 'existing' && !targetProduct) {
+      throw new Error('Selecciona el producto del catálogo al que se incorporarán las plantas');
+    }
+
+    const nextViveroNum = nextProductId.vivero || 1;
+    const generatedSku = generateSKU('vivero', nextViveroNum);
+
+    if (USE_SUPABASE) {
+      const res = await closeProductionBatchDb({
+        batch: targetBatch,
+        finalQuantity: finalQty,
+        targetMode,
+        targetProduct,
+        newProductData: {
+          ...newProductData,
+          sku: newProductData?.sku || generatedSku
+        },
+        salePrice
+      });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['productionBatches'] }),
+        queryClient.invalidateQueries({ queryKey: ['products'] }),
+        queryClient.invalidateQueries({ queryKey: ['inventoryMovements'] })
+      ]);
+      return res;
+    }
+
+    // Modo local (localStorage)
+    const totalCost = Number(targetBatch.accumulatedCost) || 0;
+    const unitCost = Math.round(totalCost / finalQty);
+    const today = getTodayString();
+    const nowTime = getCurrentTime();
+
+    let finalProdId = targetProduct?.id || generatedSku;
+
+    setData(prev => {
+      let updatedProducts = [...prev.products];
+      let newMov = null;
+      let updatedNextProductId = { ...prev.nextProductId };
+
+      if (targetMode === 'existing' && targetProduct) {
+        const prevStock = Number(targetProduct.stock) || 0;
+        const resultingStock = prevStock + finalQty;
+        const newAvgCost = calculateWeightedAverageCost(prevStock, targetProduct.cost, finalQty, unitCost);
+        const updatedPrice = salePrice && Number(salePrice) > 0 ? Number(salePrice) : Number(targetProduct.price);
+
+        updatedProducts = updatedProducts.map(p =>
+          p.id === targetProduct.id
+            ? { ...p, stock: resultingStock, cost: newAvgCost, price: updatedPrice, active: true }
+            : p
+        );
+
+        newMov = {
+          id: `mov-prod-${Date.now()}`,
+          productId: targetProduct.id,
+          productName: targetProduct.name,
+          productSku: targetProduct.sku,
+          movementType: 'ENTRADA_PRODUCCION',
+          quantity: finalQty,
+          previousStock: prevStock,
+          resultingStock,
+          reason: `Cosecha de lote ${targetBatch.batchCode} (${targetBatch.species}) — Costo unit.: $${unitCost.toLocaleString('es-CO')}`,
+          referenceId: targetBatch.batchCode,
+          date: today,
+          time: nowTime,
+          createdAt: new Date().toISOString()
+        };
+      } else {
+        const sku = newProductData?.sku || generateSKU('vivero', prev.nextProductId.vivero || 1);
+        finalProdId = sku;
+        const name = (newProductData?.name ?? targetBatch.species ?? '').trim();
+        const price = Number(salePrice) || Math.ceil((unitCost * 1.6) / 100) * 100;
+        const newProd = {
+          id: sku,
+          sku,
+          name,
+          category: 'vivero',
+          origin: 'Producción Vivero',
+          stock: finalQty,
+          minStock: Math.max(1, Math.floor(Number(newProductData?.minStock) || 10)),
+          cost: unitCost,
+          price,
+          active: true,
+          location: (newProductData?.location ?? '').trim() || 'Zona Vivero • Estante Principal',
+          unit: (newProductData?.unit ?? '').trim() || 'Unidad / Maceta',
+          description: (newProductData?.description ?? '').trim() || `Planta cultivada en vivero a partir del lote ${targetBatch.batchCode}.`,
+          supplierId: null
+        };
+        updatedProducts.push(newProd);
+        updatedNextProductId = {
+          ...prev.nextProductId,
+          vivero: (prev.nextProductId.vivero || 1) + 1
+        };
+
+        newMov = {
+          id: `mov-prod-${Date.now()}`,
+          productId: sku,
+          productName: name,
+          productSku: sku,
+          movementType: 'ENTRADA_PRODUCCION',
+          quantity: finalQty,
+          previousStock: 0,
+          resultingStock: finalQty,
+          reason: `Incorporación inicial por cosecha de lote ${targetBatch.batchCode} (${targetBatch.species}) — Costo unit.: $${unitCost.toLocaleString('es-CO')}`,
+          referenceId: targetBatch.batchCode,
+          date: today,
+          time: nowTime,
+          createdAt: new Date().toISOString()
+        };
+      }
+
+      const updatedBatches = (prev.productionBatches ?? FALLBACK_PRODUCTION_BATCHES).map(b =>
+        b.id === batchId
+          ? {
+              ...b,
+              status: 'DISPONIBLE',
+              currentQuantity: finalQty,
+              actualReadyDate: today,
+              targetProductId: finalProdId
+            }
+          : b
+      );
+
+      return {
+        ...prev,
+        products: updatedProducts,
+        productionBatches: updatedBatches,
+        inventoryMovements: newMov
+          ? [newMov, ...(prev.inventoryMovements ?? FALLBACK_INVENTORY_MOVEMENTS)]
+          : (prev.inventoryMovements ?? FALLBACK_INVENTORY_MOVEMENTS),
+        nextProductId: updatedNextProductId
+      };
+    });
+
+    return { unitCost, finalProductId: finalProdId };
+  }, [productionBatches, products, nextProductId, queryClient]);
+
   // ---------- Arqueo / Conciliación de Cuentas (RF-102 a RF-104) ----------
   const addReconciliation = useCallback(async ({
     accountId,
@@ -1084,6 +1398,10 @@ export function AppDataProvider({ children }) {
     updateSupplier,
     addPurchase,
     adjustStock,
+    addProductionBatch,
+    updateProductionBatch,
+    addProductionInput,
+    closeProductionBatch,
     addReconciliation,
     transferBetweenAccounts,
     resetDemoData

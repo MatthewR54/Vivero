@@ -10,10 +10,10 @@ El plan aborda sistemáticamente las simulaciones ("play-pretends") identificada
 
 ```mermaid
 pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.csv)
-    "Completados" : 84
+    "Completados" : 100
     "En Progreso / Parciales" : 10
     "Simulados (Play-Pretend / Fijos)" : 1
-    "No Iniciados (Falta Módulo)" : 53
+    "No Iniciados (Falta Módulo)" : 37
 ```
 
 ### Principales Simulaciones a Eliminar:
@@ -21,7 +21,7 @@ pie title Estado de los 148 Requisitos Funcionales (docs/seguimiento_requisitos.
 2. ~~**Dashboard con Datos Estáticos:** Los KPIs diarios ("+18% vs día anterior", $1.850.000 de ganancia, 116 unidades vendidas) están codificados fijamente en [`src/pages/Dashboard.jsx`](src/pages/Dashboard.jsx).~~ ✅ KPIs, alertas de stock, lotes activos y transacciones del Panel ahora se calculan en tiempo real desde la base de datos.
 3. ~~**Conciliación Falsa ($0 Descuadre):** La sección de arqueo en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx) muestra "$0.00 Diferencia (Cuadrado)" sin permitir ingresar el conteo físico de dinero real ni registrar justificaciones (RF-102 a RF-104).~~ ✅ Modal interactivo de Arqueo y Conciliación (con cálculo de faltante/sobrante, justificación obligatoria, ajuste automático de cuenta, traslado entre cuentas e historial de conciliaciones) implementado y conectado a Supabase.
 4. ~~**Filtros Temporales Inactivos:** Los selectores *Hoy / Ayer / Últimos 7 días / Este Mes* son decorativos y no filtran registros reales por fecha.~~ ✅ Los filtros de período en el Panel, en Estadísticas y en el Kardex de Inventario filtran registros reales por fecha.
-5. **Módulos Faltantes:** Proveedores, Compras y Producción Propia de Plantas aún no tienen pantallas dedicadas en el frontend (sus tablas ya existen en Supabase).
+5. ~~**Módulos Faltantes:** Proveedores, Compras y Producción Propia de Plantas aún no tienen pantallas dedicadas en el frontend (sus tablas ya existen en Supabase).~~ ✅ Implementadas las vistas dedicadas `/proveedores`, `/compras`, `/compras/nueva` y `/produccion` conectadas con Supabase y modo local.
 
 ---
 
@@ -39,7 +39,7 @@ gantt
     Módulo de Compras & Costo Promedio     :done, s2_2, after s2_1, 3d
     Kardex de Inventario & Ajustes         :done, s2_3, after s2_2, 3d
     section Sprint 3: Procesos Especializados
-    Producción Propia de Plantas           :s3_1, 2026-10-29, 4d
+    Producción Propia de Plantas           :done, s3_1, 2026-10-29, 4d
     Merchandising Personalizado            :s3_2, after s3_1, 3d
     section Sprint 4: Tesorería & Cierre
     Cuentas, Arqueo y Conciliación         :done, s4_1, 2026-11-05, 3d
@@ -86,13 +86,13 @@ gantt
 ### 🌿 Sprint 3 (Semana 3): Producción Propia de Plantas & Merchandising
 > **Objetivo:** Incorporar las dinámicas especializadas de cultivo biológico y personalización comunitaria.
 
-- [ ] **Producción Biológica de Vivero (RF-36 a RF-50):**
-  - Vista `/produccion` para monitorear lotes activos.
-  - Formulario de alta de lote: especie, cantidad inicial, fecha de inicio y fecha estimada de maduración.
-  - Registro de insumos aplicados (sustrato, fertilizantes, macetas) y acumulación de costos.
-  - Transición de estados: *En producción* → *En crecimiento* → *Disponible para venta*.
-  - Acción de cierre de lote: cálculo del costo unitario real y traspaso automático al catálogo de venta.
-  - Alerta de lotes con tiempo excedido o condiciones climáticas adversas (RF-43, RF-50).
+- [x] **Producción Biológica de Vivero (RF-36 a RF-50):**
+  - ~~Vista `/produccion` para monitorear lotes activos.~~ ✅ Implementada en [`src/pages/Production.jsx`](src/pages/Production.jsx) y conectada a Supabase (`production_batches`, `production_inputs`).
+  - ~~Formulario de alta de lote: especie, cantidad inicial, fecha de inicio y fecha estimada de maduración.~~ ✅ Modal de creación de lotes con vinculación opcional a producto del catálogo y costo base inicial.
+  - ~~Registro de insumos aplicados (sustrato, fertilizantes, macetas) y acumulación de costos.~~ ✅ Modal de Insumos y Costos con bitácora histórica y actualización automática de `accumulated_cost`.
+  - ~~Transición de estados: *En producción* → *En crecimiento* → *Disponible para venta*.~~ ✅ Botones rápidos de transición y modal de seguimiento biológico/climático.
+  - ~~Acción de cierre de lote: cálculo del costo unitario real y traspaso automático al catálogo de venta.~~ ✅ Modal *Declarar Disponible* que calcula el costo unitario real, suma las plantas al inventario (o crea un producto nuevo de vivero) y registra `ENTRADA_PRODUCCION` en el Kardex.
+  - ~~Alerta de lotes con tiempo excedido o condiciones climáticas adversas (RF-43, RF-50).~~ ✅ Detección automática de lotes con fecha estimada vencida, badge de advertencia y alerta dinámica en el Panel.
 - [ ] **Merchandising Personalizado (RF-51 a RF-60):**
   - Vista/Cotizador de personalizaciones comunitarias:
     - Selección de producto base (ej. camiseta, maceta artesanal).
@@ -117,7 +117,7 @@ gantt
   - ~~Hacer funcionales los botones de filtro temporal (*Hoy, Ayer, 7 días, Este Mes*).~~ ✅ Conectados en Dashboard y Estadísticas.
   - ~~Gráfico dinámico de ingresos vs. egresos con datos reales de la base de datos.~~ ✅ Conectado en [`src/pages/Statistics.jsx`](src/pages/Statistics.jsx).
 - [ ] **Reportes y Exportación (RF-123 a RF-138):**
-  - Exportación en CSV de reportes de inventario, compras, conciliaciones y ventas.
+  - Exportación en CSV de reportes de inventario, compras, costos de producción, conciliaciones y ventas.
 - [ ] **Validación No Funcional & Entrega:**
   - Pruebas de diseño responsive en teléfonos inteligentes y tabletas (RNF-07 a RNF-10).
   - Verificación de copias de seguridad automáticas (RNF-25).

@@ -45,6 +45,145 @@ export const seedSuppliers = [
 
 export const seedPurchases = [];
 
+export const seedProductionBatches = [
+  {
+    id: 'lot-1',
+    batchCode: 'LOT-001',
+    targetProductId: 'VIV-022',
+    species: 'Orquídea Phalaenopsis Blanca',
+    initialQuantity: 50,
+    currentQuantity: 45,
+    startDate: '2026-09-21',
+    estimatedReadyDate: '2026-12-05',
+    actualReadyDate: null,
+    status: 'EN_CRECIMIENTO',
+    environmentalConditions: 'Zona sombra 70%, humedad 65%, riego por microaspersión cada 3 días',
+    accumulatedCost: 382500,
+    inputs: [
+      {
+        id: 'inp-101',
+        batchId: 'lot-1',
+        inputName: 'Plántulas in vitro Orquídea Phalaenopsis',
+        quantity: 50,
+        unit: 'Plántula',
+        unitCost: 5200,
+        totalCost: 260000,
+        applicationDate: '2026-09-21',
+        notes: 'Lote inicial certificado de laboratorio'
+      },
+      {
+        id: 'inp-102',
+        batchId: 'lot-1',
+        inputName: 'Corteza de pino compostada + Musgo Sphagnum',
+        quantity: 5,
+        unit: 'Bulto 10Kg',
+        unitCost: 16500,
+        totalCost: 82500,
+        applicationDate: '2026-09-25',
+        notes: 'Sustrato especial aireado para epífitas'
+      },
+      {
+        id: 'inp-103',
+        batchId: 'lot-1',
+        inputName: 'Fertilizante foliar floración NPK 10-30-20',
+        quantity: 2,
+        unit: 'Litro',
+        unitCost: 20000,
+        totalCost: 40000,
+        applicationDate: '2026-10-12',
+        notes: 'Aplicación quincenal en invernadero climatizado'
+      }
+    ]
+  },
+  {
+    id: 'lot-2',
+    batchCode: 'LOT-002',
+    targetProductId: 'VIV-014',
+    species: 'Suculenta Jade Enana (Crassula ovata)',
+    initialQuantity: 60,
+    currentQuantity: 58,
+    startDate: '2026-10-06',
+    estimatedReadyDate: '2026-11-15',
+    actualReadyDate: null,
+    status: 'EN_PRODUCCION',
+    environmentalConditions: 'Exposición solar matutina 4 horas, sustrato mineral con perlita al 30%',
+    accumulatedCost: 145000,
+    inputs: [
+      {
+        id: 'inp-201',
+        batchId: 'lot-2',
+        inputName: 'Esquejes seleccionados y bandejas de germinación',
+        quantity: 60,
+        unit: 'Esqueje',
+        unitCost: 1200,
+        totalCost: 72000,
+        applicationDate: '2026-10-06',
+        notes: 'Propagación vegetativa propia en vivero'
+      },
+      {
+        id: 'inp-202',
+        batchId: 'lot-2',
+        inputName: 'Sustrato mineral drenante + Perlita + Macetas P10',
+        quantity: 60,
+        unit: 'Kit Maceta',
+        unitCost: 1050,
+        totalCost: 63000,
+        applicationDate: '2026-10-10',
+        notes: 'Trasplante a maceta individual de 10 cm'
+      },
+      {
+        id: 'inp-203',
+        batchId: 'lot-2',
+        inputName: 'Enraizante orgánico a base de algas',
+        quantity: 1,
+        unit: 'Frasco 500ml',
+        unitCost: 10000,
+        totalCost: 10000,
+        applicationDate: '2026-10-14',
+        notes: 'Estimulación radicular temprana'
+      }
+    ]
+  },
+  {
+    id: 'lot-3',
+    batchCode: 'LOT-003',
+    targetProductId: null,
+    species: 'Helecho Nativo Crespo (Nephrolepis)',
+    initialQuantity: 35,
+    currentQuantity: 32,
+    startDate: '2026-08-18',
+    estimatedReadyDate: '2026-10-18',
+    actualReadyDate: null,
+    status: 'EN_CRECIMIENTO',
+    environmentalConditions: 'Temporada de lluvias intensas y baja temperatura nocturna retrasaron el desarrollo de frondas (+12 días)',
+    accumulatedCost: 198400,
+    inputs: [
+      {
+        id: 'inp-301',
+        batchId: 'lot-3',
+        inputName: 'Rizomas de helecho nativo y tierra de capote abonada',
+        quantity: 35,
+        unit: 'Unidad',
+        unitCost: 3600,
+        totalCost: 126000,
+        applicationDate: '2026-08-18',
+        notes: 'Siembra en canastas colgantes'
+      },
+      {
+        id: 'inp-302',
+        batchId: 'lot-3',
+        inputName: 'Humus líquido de lombriz y control biológico de hongos',
+        quantity: 4,
+        unit: 'Litro',
+        unitCost: 18100,
+        totalCost: 72400,
+        applicationDate: '2026-09-28',
+        notes: 'Refuerzo por exceso de humedad ambiental'
+      }
+    ]
+  }
+];
+
 export const seedProducts = [
   {
     id: 'PRD-001',

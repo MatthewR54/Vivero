@@ -11,6 +11,7 @@ import NewProduct from './pages/NewProduct';
 import Suppliers from './pages/Suppliers';
 import Purchases from './pages/Purchases';
 import NewPurchase from './pages/NewPurchase';
+import Production from './pages/Production';
 import Statistics from './pages/Statistics';
 import './styles/globals.css';
 
@@ -29,6 +30,7 @@ function AppLayout() {
         <Route path="/ventas/nueva" element={<NewSale />} />
         <Route path="/inventario" element={<Inventory />} />
         <Route path="/inventario/nuevo" element={<NewProduct />} />
+        <Route path="/produccion" element={<Production />} />
         <Route path="/proveedores" element={<Suppliers />} />
         <Route path="/compras" element={<Purchases />} />
         <Route path="/compras/nueva" element={<NewPurchase />} />
