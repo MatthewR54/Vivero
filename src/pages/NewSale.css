@@ -81,7 +81,7 @@
 
 .ns-two-col {
   display: grid;
-  grid-template-columns: 52% 48%;
+  grid-template-columns: minmax(0, 52fr) minmax(0, 48fr);
   gap: var(--space-lg);
   align-items: start;
 }
@@ -155,6 +155,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 4px;
 }
@@ -201,6 +202,7 @@
 
 .ns-product-card-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
@@ -208,7 +210,7 @@
   background: var(--green-soft) !important;
   color: var(--green-primary) !important;
   border: 1px solid var(--green-accent) !important;
-  flex: 1;
+  flex: 1 1 110px;
 }
 
 .ns-add-btn:hover {
@@ -219,7 +221,7 @@
   background: #f3e8ff !important;
   color: #6b21a8 !important;
   border: 1px solid #c084fc !important;
-  flex: 1;
+  flex: 1 1 110px;
   font-weight: 600;
 }
 
@@ -543,8 +545,18 @@
 
 .ns-merch-form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-md);
+}
+
+.ns-merch-form-grid .form-group {
+  margin-bottom: 0;
+  min-width: 0;
+}
+
+.ns-merch-form-grid .input-field {
+  max-width: 100%;
+  text-overflow: ellipsis;
 }
 
 .ns-col-span-2 {
@@ -558,6 +570,10 @@
 }
 
 @media (max-width: 767px) {
+  .new-sale-body {
+    padding: var(--space-base);
+  }
+
   .new-sale-header {
     padding: 0 var(--space-base);
     flex-wrap: wrap;
@@ -568,11 +584,21 @@
     gap: 8px;
   }
 
+  .card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ns-catalog-header-right,
+  .ns-merch-quoter-trigger {
+    width: 100%;
+  }
+
   .ns-form-grid,
   .ns-channel-discount-row,
   .ns-merch-form-grid,
   .ns-merch-summary-banner {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .ns-col-span-2 {

@@ -252,11 +252,14 @@ img {
 }
 
 /* ===== INPUTS ===== */
-.input-group {
+.input-group,
+.form-group {
   margin-bottom: var(--space-base);
+  min-width: 0;
 }
 
-.input-group label {
+.input-group label,
+.form-label {
   display: block;
   font-size: 12px;
   font-weight: 600;
@@ -463,7 +466,8 @@ textarea.input-field {
   padding: 20px;
 }
 
-.modal-content {
+.modal-content,
+.modal-card {
   background: var(--surface);
   border-radius: var(--radius-lg);
   width: 100%;
@@ -477,18 +481,21 @@ textarea.input-field {
   color: #fff;
   padding: 18px 24px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  gap: 12px;
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 }
 
-.modal-header-title h3 {
+.modal-header-title h3,
+.modal-title {
   font-size: 16px;
   font-weight: 700;
   margin-bottom: 2px;
 }
 
-.modal-header-title p {
+.modal-header-title p,
+.modal-subtitle {
   font-size: 12px;
   opacity: 0.8;
 }
@@ -501,6 +508,7 @@ textarea.input-field {
   background: none;
   border: none;
   padding: 4px;
+  flex-shrink: 0;
 }
 
 .modal-close:hover { opacity: 1; }
@@ -516,6 +524,7 @@ textarea.input-field {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  flex-wrap: wrap;
   gap: var(--space-sm);
   border-radius: 0 0 var(--radius-lg) var(--radius-lg);
 }
@@ -614,5 +623,25 @@ textarea.input-field {
   }
   .kpi-value {
     font-size: 22px;
+  }
+  .modal-overlay {
+    padding: 10px;
+  }
+  .modal-header {
+    padding: 14px 16px;
+  }
+  .modal-body {
+    padding: 16px;
+  }
+  .modal-footer {
+    padding: 12px 16px;
+  }
+  .modal-footer .btn {
+    flex: 1 1 auto;
+    white-space: normal;
+    height: auto;
+    min-height: var(--btn-height);
+    padding: 8px 14px;
+    text-align: center;
   }
 }

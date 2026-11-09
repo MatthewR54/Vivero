@@ -302,6 +302,17 @@
 }
 
 @media (max-width: 767px) {
+  .page-header-right {
+    width: 100%;
+  }
+  .page-header-right .btn {
+    flex: 1 1 auto;
+    white-space: normal;
+    height: auto;
+    min-height: var(--btn-height);
+    padding: 8px 12px;
+    text-align: center;
+  }
   .sales-search {
     min-width: 100%;
   }
@@ -310,5 +321,18 @@
   }
   .sales-merch-summary-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  .sales-merch-actions-bar > div {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .sales-merch-actions-bar .btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .sales-merch-summary-grid {
+    grid-template-columns: 1fr;
   }
 }
