@@ -247,19 +247,19 @@ export default function NewSale() {
       return;
     }
     if (Number(merchForm.baseCost) <= 0) {
-      showToast('El costo de prenda base debe ser mayor a $0 (RNF-16)', 'error');
+      showToast('El costo de prenda base debe ser mayor a $0', 'error');
       return;
     }
     if (Number(merchForm.customCost) < 0) {
-      showToast('El costo de personalización no puede ser negativo (RNF-16)', 'error');
+      showToast('El costo de personalización no puede ser negativo', 'error');
       return;
     }
     if (merchCalc.finalUnitPrice <= 0) {
-      showToast('El precio final de venta debe ser mayor a $0 (RNF-16)', 'error');
+      showToast('El precio final de venta debe ser mayor a $0', 'error');
       return;
     }
     if (!merchForm.designNotes.trim()) {
-      showToast('Ingresa las características o notas de diseño de la personalización (RF-53)', 'error');
+      showToast('Ingresa las características o notas de diseño de la personalización', 'error');
       return;
     }
 
@@ -392,7 +392,7 @@ export default function NewSale() {
     if (cart.length === 0) {
       newErrors.cart = 'Agrega al menos un producto a la venta';
     } else if (cart.some(c => !c.unitPrice || Number(c.unitPrice) <= 0)) {
-      newErrors.cart = 'Todos los productos deben tener un precio unitario mayor a $0 (RNF-16)';
+      newErrors.cart = 'Todos los productos deben tener un precio unitario mayor a $0';
     } else if (cartTotal <= 0) {
       newErrors.cart = 'El total final de la venta debe ser mayor a $0';
     }
@@ -579,7 +579,7 @@ export default function NewSale() {
                               className="btn btn-sm ns-customize-btn"
                               onClick={() => openMerchCustomizer(p)}
                               disabled={remainingStock <= 0}
-                              title="Abrir calculadora de personalización (RF-53 a RF-57)"
+                              title="Abrir calculadora de personalización"
                             >
                               <Palette size={14} /> Personalizar
                             </button>
@@ -680,7 +680,7 @@ export default function NewSale() {
                   Ítems en la Venta ({cart.length} línea{cart.length !== 1 ? 's' : ''})
                 </div>
                 <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
-                  Puedes ajustar el precio final unitario si corresponde (RF-65)
+                  Puedes ajustar el precio final unitario si corresponde
                 </span>
               </div>
               <div className="card-body">
@@ -718,7 +718,7 @@ export default function NewSale() {
                           )}
                         </div>
 
-                        <div className="ns-cart-price-edit" title="Precio unitario final pactado (RF-55, RF-65)">
+                        <div className="ns-cart-price-edit" title="Precio unitario final pactado">
                           <span className="ns-price-prefix">$</span>
                           <input
                             type="number"
@@ -796,7 +796,7 @@ export default function NewSale() {
                   <div className="input-group">
                     <label>
                       <Globe size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                      Canal de Venta (RF-68)
+                      Canal de Venta
                     </label>
                     <select
                       className="input-field"
@@ -812,7 +812,7 @@ export default function NewSale() {
                   <div className="input-group">
                     <label>
                       <Tag size={13} style={{ verticalAlign: 'middle', marginRight: 4 }} />
-                      Descuento Aplicado (COP) (RF-64)
+                      Descuento Aplicado (COP)
                     </label>
                     <input
                       type="number"
@@ -971,7 +971,7 @@ export default function NewSale() {
               {/* Tarjeta resumen financiero de la personalización (RF-56, RF-57, RF-59) */}
               <div className="ns-merch-summary-banner">
                 <div>
-                  <span className="ns-merch-banner-label">Costo Total Unitario (RF-56)</span>
+                  <span className="ns-merch-banner-label">Costo Total Unitario</span>
                   <div className="ns-merch-banner-val">{formatCOP(merchCalc.totalUnitCost)}</div>
                   <span className="ns-merch-banner-sub">
                     Base {formatCOP(merchCalc.baseCost)} + Pers. {formatCOP(merchCalc.customCost)}
@@ -985,7 +985,7 @@ export default function NewSale() {
                   </span>
                 </div>
                 <div>
-                  <span className="ns-merch-banner-label">Ganancia Estimada (RF-57)</span>
+                  <span className="ns-merch-banner-label">Ganancia Estimada</span>
                   <div className={`ns-merch-banner-val ${merchCalc.totalProfit >= 0 ? 'positive' : 'negative'}`}>
                     {formatCOP(merchCalc.totalProfit)} ({merchCalc.marginPercent}%)
                   </div>
@@ -997,7 +997,7 @@ export default function NewSale() {
 
               <div className="ns-merch-form-grid">
                 <div className="form-group ns-col-span-2">
-                  <label className="form-label">Artículo / Prenda Base de Merchandising (RF-51, RF-52) *</label>
+                  <label className="form-label">Artículo / Prenda Base de Merchandising *</label>
                   <select
                     className="input-field"
                     value={merchForm.productId}
@@ -1024,7 +1024,7 @@ export default function NewSale() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Cantidad de Unidades Personalizadas (RF-58) *</label>
+                  <label className="form-label">Cantidad de Unidades Personalizadas *</label>
                   <input
                     type="number"
                     min="1"
@@ -1036,7 +1036,7 @@ export default function NewSale() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Talla / Presentación (RF-53)</label>
+                  <label className="form-label">Talla / Presentación</label>
                   <select
                     className="input-field"
                     value={merchForm.size}
@@ -1095,7 +1095,7 @@ export default function NewSale() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Costo Adicional de Personalización / Estampado (RF-54) *</label>
+                  <label className="form-label">Costo Adicional de Personalización / Estampado *</label>
                   <input
                     type="number"
                     min="0"
@@ -1108,7 +1108,7 @@ export default function NewSale() {
 
                 <div className="form-group ns-col-span-2">
                   <label className="form-label">
-                    Precio de Venta Unitario Final Pactado con el Cliente (COP) (RF-55) *
+                    Precio de Venta Unitario Final Pactado con el Cliente (COP) *
                   </label>
                   <input
                     type="number"
@@ -1122,7 +1122,7 @@ export default function NewSale() {
 
                 <div className="form-group ns-col-span-2">
                   <label className="form-label">
-                    Características Específicas y Notas de Diseño para el Comprobante (RF-53, RF-60) *
+                    Características Específicas y Notas de Diseño para el Comprobante *
                   </label>
                   <textarea
                     rows={2}

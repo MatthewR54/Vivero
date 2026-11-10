@@ -300,7 +300,7 @@ export default function Suppliers() {
             <Package size={20} />
           </div>
           <div>
-            <div className="sup-kpi-label">Productos Vinculados (RF-13)</div>
+            <div className="sup-kpi-label">Productos Vinculados</div>
             <div className="sup-kpi-value">{linkedProductsCount} de {products.length}</div>
             <div className="sup-kpi-sub">Con proveedor habitual asignado</div>
           </div>
@@ -311,7 +311,7 @@ export default function Suppliers() {
             <ShoppingBag size={20} />
           </div>
           <div>
-            <div className="sup-kpi-label">Compras Registradas (RF-14)</div>
+            <div className="sup-kpi-label">Compras Registradas</div>
             <div className="sup-kpi-value">{purchases?.length || 0}</div>
             <div className="sup-kpi-sub">Facturas de abastecimiento en historial</div>
           </div>
@@ -445,7 +445,7 @@ export default function Suppliers() {
                           <button
                             className="btn btn-sm btn-cyan"
                             onClick={() => openEditModal(s)}
-                            title="Modificar datos de contacto del proveedor (RF-11)"
+                            title="Modificar datos de contacto del proveedor"
                           >
                             <Pencil size={12} /> Editar
                           </button>
@@ -455,7 +455,7 @@ export default function Suppliers() {
                               setDetailSupplierId(s.id);
                               setSelectedProductToLink('');
                             }}
-                            title="Gestionar productos asociados (RF-13) y consultar historial de compras (RF-14)"
+                            title="Gestionar productos asociados y consultar historial de compras"
                           >
                             <Link2 size={12} /> Productos / Historial
                           </button>
@@ -622,7 +622,7 @@ export default function Suppliers() {
               <div className="sup-detail-section">
                 <div className="sup-detail-header">
                   <div>
-                    <h4><Package size={15} /> Productos Asociados a este Proveedor (RF-13)</h4>
+                    <h4><Package size={15} /> Productos Asociados a este Proveedor</h4>
                     <p>Productos del catálogo suministrados habitualmente por {detailSupplier.name}</p>
                   </div>
                   <div className="sup-link-bar">
@@ -700,7 +700,7 @@ export default function Suppliers() {
               <div className="sup-detail-section" style={{ marginTop: 20 }}>
                 <div className="sup-detail-header">
                   <div>
-                    <h4><ShoppingBag size={15} /> Historial de Compras Realizadas al Proveedor (RF-14)</h4>
+                    <h4><ShoppingBag size={15} /> Historial de Compras Realizadas al Proveedor</h4>
                     <p>Registro histórico de facturas de reabastecimiento e insumos adquiridos</p>
                   </div>
                   <div className="sup-purchase-total">

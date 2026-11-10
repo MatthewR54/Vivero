@@ -67,7 +67,7 @@ export async function adjustProductStock({
     .trim();
 
   if (!cleanReason) {
-    throw new Error('El motivo del ajuste de inventario es obligatorio (RF-27)');
+    throw new Error('El motivo del ajuste de inventario es obligatorio');
   }
 
   const previousStock = Number(product.stock) || 0;

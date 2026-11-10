@@ -116,7 +116,7 @@ export default function Purchases() {
       <div className="page-header">
         <div className="page-header-left">
           <h1>Historial y Control de Compras a Proveedores</h1>
-          <p>Consulta de facturas de abastecimiento, costos de adquisición y entradas de mercancía por período (RF-21, RF-22, RF-127)</p>
+          <p>Consulta de facturas de abastecimiento, costos de adquisición y entradas de mercancía por período</p>
         </div>
         <div className="page-header-right">
           <button className="btn btn-outline" onClick={handleExportPurchasesCSV}>

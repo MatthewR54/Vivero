@@ -819,7 +819,7 @@ export default function Statistics() {
             <div className="modal-header">
               <div className="modal-header-title">
                 <h3>Registrar Traslado entre Cuentas</h3>
-                <p>Consignación de efectivo a banco, retiro o transferencia interna (RF-101)</p>
+                <p>Consignación de efectivo a banco, retiro o transferencia interna</p>
               </div>
               <button className="modal-close" onClick={() => setTransferModalOpen(false)} aria-label="Cerrar">
                 <X size={20} />

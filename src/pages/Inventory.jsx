@@ -570,7 +570,7 @@ export default function Inventory() {
                     <div className="input-hint">Dispara alertas en Dashboard</div>
                   </div>
                   <div className="input-group">
-                    <label>Estado de Visibilidad en POS (RF-08)</label>
+                    <label>Estado de Visibilidad en POS</label>
                     <button
                       type="button"
                       className={`edit-visibility-toggle ${editForm.active ? 'active' : 'inactive'}`}
@@ -618,7 +618,7 @@ export default function Inventory() {
                   />
                 </div>
                 <div className="input-group">
-                  <label>Proveedor Asociado (RF-13)</label>
+                  <label>Proveedor Asociado</label>
                   <select
                     className="input-field"
                     value={editForm.supplierId || ''}
@@ -752,7 +752,7 @@ export default function Inventory() {
                 </div>
 
                 <div className="input-group">
-                  <label>Motivo Principal (RF-27) *</label>
+                  <label>Motivo Principal *</label>
                   <select
                     className="input-field"
                     value={adjustForm.reasonCategory}
@@ -839,7 +839,7 @@ export default function Inventory() {
               {/* Filters Bar (RF-29 product filter + RF-30 date period filter) */}
               <div className="kardex-filters-bar">
                 <div className="input-group kardex-filter-select">
-                  <label>Filtrar por Producto (RF-29)</label>
+                  <label>Filtrar por Producto</label>
                   <select
                     className="input-field"
                     value={kardexProductFilter}
@@ -868,7 +868,7 @@ export default function Inventory() {
                 </div>
 
                 <div className="input-group">
-                  <label>Periodo de Consulta (RF-30)</label>
+                  <label>Periodo de Consulta</label>
                   <div className="chip-group">
                     {KARDEX_PERIODS.map(p => (
                       <button

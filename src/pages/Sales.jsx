@@ -248,7 +248,7 @@ export default function Sales() {
             <input
               type="text"
               className="input-field"
-              placeholder="Buscar por # de comprobante, cliente, cédula o producto vendido (RF-73)..."
+              placeholder="Buscar por # de comprobante, cliente, cédula o producto vendido..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               aria-label="Buscar ventas"
@@ -291,7 +291,7 @@ export default function Sales() {
         <div className="sales-date-range-bar">
           <div className="sales-date-range-left">
             <span className="sales-date-range-label">
-              <Calendar size={14} /> Consultar por fecha o período (RF-72, RF-75):
+              <Calendar size={14} /> Consultar por fecha o período:
             </span>
             <div className="sales-date-field">
               <label htmlFor="sales-date-from">Desde</label>
@@ -477,7 +477,7 @@ export default function Sales() {
               <div>
                 <h3 className="modal-title">
                   <Sparkles size={18} style={{ verticalAlign: 'middle', marginRight: 6, color: '#7e22ce' }} />
-                  Historial y Costeo de Merchandising Personalizado (RF-59, RF-60)
+                  Historial y Costeo de Merchandising Personalizado
                 </h3>
                 <p className="modal-subtitle">
                   Consulta el costo base, costos adicionales de personalización, precio final de venta y ganancia de cada artículo personalizado vendido.
@@ -491,11 +491,11 @@ export default function Sales() {
             <div className="modal-body">
               <div className="sales-merch-summary-grid">
                 <div className="sales-merch-stat-box">
-                  <span>Unidades Personalizadas (RF-58)</span>
+                  <span>Unidades Personalizadas</span>
                   <strong>{merchStats.totalUnits} prendas / artículos</strong>
                 </div>
                 <div className="sales-merch-stat-box">
-                  <span>Costo Total Acumulado (RF-56)</span>
+                  <span>Costo Total Acumulado</span>
                   <strong>{formatCOP(merchStats.totalCost)}</strong>
                 </div>
                 <div className="sales-merch-stat-box">
@@ -503,7 +503,7 @@ export default function Sales() {
                   <strong>{formatCOP(merchStats.totalRevenue)}</strong>
                 </div>
                 <div className="sales-merch-stat-box highlight">
-                  <span>Ganancia Neta Estimada (RF-57)</span>
+                  <span>Ganancia Neta Estimada</span>
                   <strong>{formatCOP(merchStats.totalProfit)}</strong>
                 </div>
               </div>
@@ -514,7 +514,7 @@ export default function Sales() {
                 </span>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <button className="btn btn-outline btn-sm" onClick={handleExportMerchCSV}>
-                    <Download size={14} /> Exportar Reporte CSV (RF-129)
+                    <Download size={14} /> Exportar Reporte CSV
                   </button>
                   <button
                     className="btn btn-primary btn-sm"
@@ -535,10 +535,10 @@ export default function Sales() {
                       <th>Comprobante / Fecha</th>
                       <th>Cliente</th>
                       <th>Producto & Unidades</th>
-                      <th>Especificaciones de Personalización (RF-53)</th>
-                      <th>Costo Base + Pers. = Total (RF-56)</th>
-                      <th>Precio Venta Final (RF-55)</th>
-                      <th>Ganancia & Margen (RF-57, RF-59)</th>
+                      <th>Especificaciones de Personalización</th>
+                      <th>Costo Base + Pers. = Total</th>
+                      <th>Precio Venta Final</th>
+                      <th>Ganancia & Margen</th>
                     </tr>
                   </thead>
                   <tbody>

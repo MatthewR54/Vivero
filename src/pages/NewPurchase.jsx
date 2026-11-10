@@ -223,7 +223,7 @@ export default function NewPurchase() {
       <div className="page-header">
         <div className="page-header-left">
           <h1>Registrar Factura de Compra a Proveedor</h1>
-          <p>Ingreso de mercancía e insumos con actualización automática de existencias y costo promedio ponderado (RF-15 a RF-20, RF-33)</p>
+          <p>Ingreso de mercancía e insumos con actualización automática de existencias y costo promedio ponderado</p>
         </div>
         <div className="page-header-right">
           <button className="btn btn-ghost" onClick={() => navigate('/compras')}>
@@ -248,7 +248,7 @@ export default function NewPurchase() {
             </div>
 
             <div className="input-group">
-              <label>Proveedor Abastecedor (RF-15) *</label>
+              <label>Proveedor Abastecedor *</label>
               <select
                 className="input-field"
                 value={supplierId}
@@ -280,7 +280,7 @@ export default function NewPurchase() {
             </div>
 
             <div className="input-group">
-              <label>Fecha de Compra (RF-16) *</label>
+              <label>Fecha de Compra *</label>
               <input
                 type="date"
                 className="input-field"
@@ -292,7 +292,7 @@ export default function NewPurchase() {
             <div className="npur-divider" />
 
             <div className="npur-section-title">
-              <Wallet size={16} /> 2. Cuenta de Pago (RF-96)
+              <Wallet size={16} /> 2. Cuenta de Pago
             </div>
 
             <div className="input-group">
@@ -346,7 +346,7 @@ export default function NewPurchase() {
             <div className="npur-items-header">
               <div>
                 <div className="npur-section-title" style={{ marginBottom: 2 }}>
-                  <Package size={16} /> 3. Productos y Cantidades Adquiridas (RF-17, RF-18, RF-33)
+                  <Package size={16} /> 3. Productos y Cantidades Adquiridas
                 </div>
                 <p className="npur-subtitle">
                   Cada línea calcula automáticamente el nuevo stock y el <strong>Costo Promedio Ponderado</strong>.
@@ -405,10 +405,10 @@ export default function NewPurchase() {
                   <thead>
                     <tr>
                       <th>Producto</th>
-                      <th>Proyección Stock (RF-20)</th>
+                      <th>Proyección Stock</th>
                       <th>Cantidad a Comprar *</th>
                       <th>Costo Unit. Compra *</th>
-                      <th>Nuevo Costo Promedio (RF-33)</th>
+                      <th>Nuevo Costo Promedio</th>
                       <th>Subtotal</th>
                       <th></th>
                     </tr>
@@ -505,7 +505,7 @@ export default function NewPurchase() {
                 </div>
               </div>
               <div className="npur-grand-total">
-                <span>Costo Total de la Compra (RF-19):</span>
+                <span>Costo Total de la Compra:</span>
                 <strong>{formatCOP(summary.totalCost)}</strong>
               </div>
             </div>

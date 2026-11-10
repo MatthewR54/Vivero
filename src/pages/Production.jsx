@@ -788,7 +788,7 @@ export default function Production() {
                         <button
                           className="btn btn-outline btn-sm"
                           onClick={() => openInputsModal(batch)}
-                          title="Registrar insumos y consultar costos acumulados (RF-41, RF-48)"
+                          title="Registrar insumos y consultar costos acumulados"
                         >
                           <FlaskConical size={13} /> Insumos
                         </button>
@@ -798,14 +798,14 @@ export default function Production() {
                             <button
                               className="btn btn-outline btn-sm"
                               onClick={() => openEditBatchModal(batch)}
-                              title="Actualizar estado, clima o fecha estimada (RF-43, RF-44)"
+                              title="Actualizar estado, clima o fecha estimada"
                             >
                               <Pencil size={13} /> Clima / Estado
                             </button>
                             <button
                               className="btn btn-primary btn-sm"
                               onClick={() => openCloseModal(batch)}
-                              title="Finalizar producción e incorporar plantas al inventario (RF-45, RF-46)"
+                              title="Finalizar producción e incorporar plantas al inventario"
                             >
                               <CheckCircle2 size={13} /> Declarar Disponible
                             </button>
@@ -967,7 +967,7 @@ export default function Production() {
                 </div>
 
                 <div className="form-group prod-col-span-2">
-                  <label className="form-label">Condiciones Climáticas, Riego y Factores de Cultivo (RF-43)</label>
+                  <label className="form-label">Condiciones Climáticas, Riego y Factores de Cultivo</label>
                   <textarea
                     rows={2}
                     className="input-field"
@@ -1023,7 +1023,7 @@ export default function Production() {
                   <div className="prod-banner-value">{activeInputsBatch.currentQuantity} uds</div>
                 </div>
                 <div>
-                  <span className="prod-banner-label">Costo Unitario Estimado (RF-47)</span>
+                  <span className="prod-banner-label">Costo Unitario Estimado</span>
                   <div className="prod-banner-value highlight">
                     {formatCOP(activeInputsBatch.estimatedUnitCost)} / planta
                   </div>
@@ -1034,7 +1034,7 @@ export default function Production() {
               {activeInputsBatch.isActive && (
                 <div className="prod-add-input-box">
                   <div className="prod-add-input-header">
-                    <h4>+ Registrar Nuevo Insumo o Costo Aplicado (RF-41, RF-42)</h4>
+                    <h4>+ Registrar Nuevo Insumo o Costo Aplicado</h4>
                     <div className="prod-preset-chips">
                       {COMMON_INPUT_PRESETS.map((preset, idx) => (
                         <button
@@ -1201,7 +1201,7 @@ export default function Production() {
                   Seguimiento Biológico y Climático — {editBatchModal.batchCode}
                 </h3>
                 <p className="modal-subtitle">
-                  Actualiza la etapa del cultivo, mermas biológicas, fecha estimada o factores climáticos (RF-43, RF-44).
+                  Actualiza la etapa del cultivo, mermas biológicas, fecha estimada o factores climáticos.
                 </p>
               </div>
               <button className="modal-close" onClick={() => setEditBatchModal(null)}>
@@ -1222,7 +1222,7 @@ export default function Production() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Estado del Proceso (RF-44)</label>
+                  <label className="form-label">Estado del Proceso</label>
                   <select
                     className="input-field"
                     value={editBatchForm.status}
@@ -1249,7 +1249,7 @@ export default function Production() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Fecha Estimada de Disponibilidad (RF-40, RF-50)</label>
+                  <label className="form-label">Fecha Estimada de Disponibilidad</label>
                   <input
                     type="date"
                     className="input-field"
@@ -1276,7 +1276,7 @@ export default function Production() {
 
                 <div className="form-group prod-col-span-2">
                   <label className="form-label">
-                    Condiciones Climáticas o Factores que Afectan el Tiempo de Producción (RF-43)
+                    Condiciones Climáticas o Factores que Afectan el Tiempo de Producción
                   </label>
                   <textarea
                     rows={3}
@@ -1313,7 +1313,7 @@ export default function Production() {
                   Finalizar Producción e Incorporar al Inventario — {closeModalBatch.batchCode}
                 </h3>
                 <p className="modal-subtitle">
-                  Declara las plantas disponibles para la venta, calcula el costo unitario real y suma las unidades al catálogo activo (RF-45, RF-46, RF-47).
+                  Declara las plantas disponibles para la venta, calcula el costo unitario real y suma las unidades al catálogo activo.
                 </p>
               </div>
               <button className="modal-close" onClick={() => setCloseModalBatch(null)}>

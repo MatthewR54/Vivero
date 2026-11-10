@@ -84,13 +84,13 @@ export default function NewProduct() {
     }
 
     if (form.cost === '' || form.cost === null || Number.isNaN(costNum) || costNum <= 0) {
-      newErrors.cost = 'El costo unitario debe ser mayor a $0 (RNF-16)';
+      newErrors.cost = 'El costo unitario debe ser mayor a $0';
     }
 
     if (form.price === '' || form.price === null || Number.isNaN(priceNum) || priceNum <= 0) {
-      newErrors.price = 'El precio de venta debe ser mayor a $0 (RNF-16)';
+      newErrors.price = 'El precio de venta debe ser mayor a $0';
     } else if (!Number.isNaN(costNum) && costNum > 0 && priceNum < costNum) {
-      newErrors.price = 'El precio de venta no puede ser inferior al costo unitario (RNF-17)';
+      newErrors.price = 'El precio de venta no puede ser inferior al costo unitario';
     }
 
     if (form.category === 'comestibles' && !form.supplierId && activeSuppliers.length > 0) {
@@ -173,7 +173,7 @@ export default function NewProduct() {
             <div className="input-group">
               <label>
                 <Truck size={13} style={{ marginRight: 5, display: 'inline', verticalAlign: 'middle' }} />
-                Proveedor Asociado (RF-13) {form.category === 'comestibles' ? '*' : '(Opcional)'}
+                Proveedor Asociado {form.category === 'comestibles' ? '*' : '(Opcional)'}
               </label>
               <select
                 className={`input-field ${errors.supplierId ? 'error' : ''}`}
