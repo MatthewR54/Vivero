@@ -428,6 +428,70 @@
   gap: var(--space-md);
 }
 
+/* Fecha y Hora (Ahora vs Anterior) */
+.ns-datetime-section {
+  margin-top: 4px;
+  padding: 12px 14px;
+  background: var(--background-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.ns-datetime-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ns-datetime-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.ns-datetime-switch {
+  display: inline-flex;
+  background: var(--surface);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-btn);
+  padding: 2px;
+  gap: 2px;
+}
+
+.ns-switch-btn {
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: calc(var(--radius-btn) - 2px);
+  color: var(--text-secondary);
+  background: transparent;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.ns-switch-btn.active {
+  background: var(--green-primary);
+  color: #fff;
+}
+
+.ns-datetime-now-hint {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.ns-datetime-inputs {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
 /* Total Box */
 .ns-total-box {
   background: var(--green-soft);
@@ -596,9 +660,19 @@
 
   .ns-form-grid,
   .ns-channel-discount-row,
+  .ns-datetime-inputs,
   .ns-merch-form-grid,
   .ns-merch-summary-banner {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ns-datetime-switch {
+    width: 100%;
+  }
+
+  .ns-switch-btn {
+    flex: 1;
+    text-align: center;
   }
 
   .ns-col-span-2 {

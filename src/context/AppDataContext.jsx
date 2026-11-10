@@ -422,8 +422,8 @@ export function AppDataProvider({ children }) {
         const methodLabel = linkedSale?.paymentMethod
           || (m.accountName?.includes('Efectivo') ? 'Efectivo'
             : m.accountName?.includes('Nequi') ? 'Nequi'
-            : m.accountName?.includes('Bancolombia') ? 'Bancolombia'
-            : 'Caja');
+              : m.accountName?.includes('Bancolombia') ? 'Bancolombia'
+                : 'Caja');
         const timeStr = linkedSale?.time
           || (m.createdAt ? new Date(m.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false }) : '');
         const summaryStr = linkedSale ? summarizeItems(linkedSale.items) : m.concept;
@@ -564,8 +564,8 @@ export function AppDataProvider({ children }) {
 
     // Modo local (localStorage)
     const saleId = generateSaleId(data.nextSaleId);
-    const today = getTodayString();
-    const nowTime = getCurrentTime();
+    const today = saleData.saleDate || getTodayString();
+    const nowTime = saleData.saleTime || getCurrentTime();
     setData(prev => {
       const newProducts = deductStock(prev.products, saleData.items);
       const subtotal = saleData.items.reduce((sum, it) => sum + Number(it.subtotal || 0), 0);
@@ -707,20 +707,20 @@ export function AppDataProvider({ children }) {
       };
       const initMov = initialStock > 0
         ? [{
-            id: `init-${sku}-${Date.now()}`,
-            productId: sku,
-            productName: productData.name,
-            productSku: sku,
-            movementType: 'INICIAL',
-            quantity: initialStock,
-            previousStock: 0,
-            resultingStock: initialStock,
-            reason: 'Stock inicial al registrar el producto',
-            referenceId: sku,
-            date: today,
-            time: nowTime,
-            createdAt: new Date().toISOString()
-          }]
+          id: `init-${sku}-${Date.now()}`,
+          productId: sku,
+          productName: productData.name,
+          productSku: sku,
+          movementType: 'INICIAL',
+          quantity: initialStock,
+          previousStock: 0,
+          resultingStock: initialStock,
+          reason: 'Stock inicial al registrar el producto',
+          referenceId: sku,
+          date: today,
+          time: nowTime,
+          createdAt: new Date().toISOString()
+        }]
         : [];
       return {
         ...prev,
@@ -909,10 +909,10 @@ export function AppDataProvider({ children }) {
       const prevAccounts = prev.accounts ?? FALLBACK_ACCOUNTS;
       const updatedAccounts = accountId
         ? prevAccounts.map(acc =>
-            Number(acc.id) === Number(accountId)
-              ? { ...acc, balance: Number(acc.balance) - totalCost }
-              : acc
-          )
+          Number(acc.id) === Number(accountId)
+            ? { ...acc, balance: Number(acc.balance) - totalCost }
+            : acc
+        )
         : prevAccounts;
 
       const newTx = {
@@ -1049,16 +1049,16 @@ export function AppDataProvider({ children }) {
     const newId = `lot-${Date.now()}`;
     const initialInputs = initCost > 0
       ? [{
-          id: `inp-${Date.now()}`,
-          batchId: newId,
-          inputName: (batchData.initialInputName ?? '').trim() || 'Semillas / Esquejes y sustrato base inicial',
-          quantity: initQty,
-          unit: 'Plántula/Esqueje',
-          unitCost: Math.round((initCost / initQty) * 100) / 100,
-          totalCost: initCost,
-          applicationDate: start,
-          notes: 'Costo base de apertura del lote'
-        }]
+        id: `inp-${Date.now()}`,
+        batchId: newId,
+        inputName: (batchData.initialInputName ?? '').trim() || 'Semillas / Esquejes y sustrato base inicial',
+        quantity: initQty,
+        unit: 'Plántula/Esqueje',
+        unitCost: Math.round((initCost / initQty) * 100) / 100,
+        totalCost: initCost,
+        applicationDate: start,
+        notes: 'Costo base de apertura del lote'
+      }]
       : [];
 
     const newBatch = {
@@ -1308,12 +1308,12 @@ export function AppDataProvider({ children }) {
       const updatedBatches = (prev.productionBatches ?? FALLBACK_PRODUCTION_BATCHES).map(b =>
         b.id === batchId
           ? {
-              ...b,
-              status: 'DISPONIBLE',
-              currentQuantity: finalQty,
-              actualReadyDate: today,
-              targetProductId: finalProdId
-            }
+            ...b,
+            status: 'DISPONIBLE',
+            currentQuantity: finalQty,
+            actualReadyDate: today,
+            targetProductId: finalProdId
+          }
           : b
       );
 
@@ -1391,14 +1391,14 @@ export function AppDataProvider({ children }) {
       const prevTxs = prev.transactions ?? [];
       const extraTx = (difference !== 0 && adjustAccountBalance)
         ? [{
-            id: newRecon.id.slice(0, 10),
-            type: difference >= 0 ? 'venta' : 'compra',
-            summary: `Ajuste por arqueo (${targetAcc?.name ?? 'Caja'}): ${trimmedJustification}`,
-            date: today,
-            time: getCurrentTime(),
-            method: difference >= 0 ? 'Ajuste +' : 'Ajuste -',
-            amount: difference
-          }]
+          id: newRecon.id.slice(0, 10),
+          type: difference >= 0 ? 'venta' : 'compra',
+          summary: `Ajuste por arqueo (${targetAcc?.name ?? 'Caja'}): ${trimmedJustification}`,
+          date: today,
+          time: getCurrentTime(),
+          method: difference >= 0 ? 'Ajuste +' : 'Ajuste -',
+          amount: difference
+        }]
         : [];
 
       return {

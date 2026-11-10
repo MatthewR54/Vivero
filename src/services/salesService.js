@@ -74,6 +74,8 @@ export async function fetchSales() {
   const { data, error } = await supabase
     .from('sales')
     .select('*, sale_items(*)')
+    .order('sale_date', { ascending: false })
+    .order('sale_time', { ascending: false })
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -122,6 +124,41 @@ export async function createSale(saleData) {
     throw new Error(error.message);
   }
 
+  let finalDate = data?.date;
+  let finalTime = data?.time;
+
+  // Si el usuario eligió registrar una venta con fecha/hora anterior, actualizamos las columnas existentes sin modificar el esquema de la BD
+  if (data?.saleId && (saleData.saleDate || saleData.saleTime)) {
+    const updateFields = {};
+    if (saleData.saleDate) {
+      updateFields.sale_date = saleData.saleDate;
+      finalDate = saleData.saleDate;
+    }
+    if (saleData.saleTime) {
+      const normalizedTime = saleData.saleTime.length === 5
+        ? `${saleData.saleTime}:00`
+        : saleData.saleTime;
+      updateFields.sale_time = normalizedTime;
+      finalTime = saleData.saleTime.slice(0, 5);
+    }
+
+    const { error: dateUpdateErr } = await supabase
+      .from('sales')
+      .update(updateFields)
+      .eq('id', data.saleId);
+
+    if (dateUpdateErr) {
+      console.error('[Supabase] Aviso: no se pudo actualizar fecha/hora de la venta:', dateUpdateErr);
+    }
+
+    if (saleData.saleDate) {
+      await supabase
+        .from('money_movements')
+        .update({ movement_date: saleData.saleDate })
+        .eq('reference_id', data.saleId);
+    }
+  }
+
   // Persistir órdenes de merchandising personalizado (RF-53 a RF-60)
   const customItems = (saleData.items ?? []).filter(i => Boolean(i.customization));
   if (customItems.length > 0 && data?.saleId) {
@@ -146,7 +183,7 @@ export async function createSale(saleData) {
         custom_specifications: {
           ...cust,
           productName: item.baseName || item.name,
-          date: data.date
+          date: finalDate
         },
         status: cust.status || 'ENTREGADO'
       };
@@ -176,5 +213,9 @@ export async function createSale(saleData) {
     }
   }
 
-  return data; // { success, saleId, date, time, subtotal, discount, total }
+  return {
+    ...data,
+    date: finalDate,
+    time: finalTime
+  }; // { success, saleId, date, time, subtotal, discount, total }
 }

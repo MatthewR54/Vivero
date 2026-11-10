@@ -2,6 +2,7 @@ import { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppData } from '../context/AppDataContext';
 import { formatCOP } from '../utils/currency';
+import { getTodayString, getCurrentTime } from '../utils/calculations';
 import {
   ArrowLeft,
   Search,
@@ -15,7 +16,9 @@ import {
   Sparkles,
   Globe,
   Tag,
-  Pencil
+  Pencil,
+  Clock,
+  Calendar
 } from 'lucide-react';
 import colibriLogo from '../assets/colibri_logo.png';
 import './NewSale.css';
@@ -68,6 +71,9 @@ export default function NewSale() {
   const [saleChannel, setSaleChannel] = useState('PRESENCIAL');
   const [discountInput, setDiscountInput] = useState('');
   const [received, setReceived] = useState('');
+  const [dateTimeMode, setDateTimeMode] = useState('now'); // 'now' | 'custom'
+  const [customDate, setCustomDate] = useState(() => getTodayString());
+  const [customTime, setCustomTime] = useState(() => getCurrentTime());
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -423,6 +429,17 @@ export default function NewSale() {
       newErrors.received = 'El monto recibido en efectivo es insuficiente para cubrir el total';
     }
 
+    if (dateTimeMode === 'custom') {
+      if (!customDate) {
+        newErrors.customDate = 'Selecciona la fecha de la venta';
+      } else if (customDate > getTodayString()) {
+        newErrors.customDate = 'La fecha de una venta anterior no puede ser futura';
+      }
+      if (!customTime) {
+        newErrors.customTime = 'Selecciona la hora de la venta';
+      }
+    }
+
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) {
       showToast('Revisa los campos marcados antes de emitir la venta', 'error');
@@ -452,7 +469,9 @@ export default function NewSale() {
         channel: saleChannel,
         subtotal: cartSubtotal,
         discount: discountNum,
-        total: cartTotal
+        total: cartTotal,
+        saleDate: dateTimeMode === 'custom' ? customDate : null,
+        saleTime: dateTimeMode === 'custom' ? customTime : null
       });
 
       showToast(`Venta ${saleId ?? ''} registrada correctamente`, 'success');
@@ -805,6 +824,81 @@ export default function NewSale() {
                       onChange={e => setDiscountInput(e.target.value)}
                     />
                   </div>
+                </div>
+
+                {/* Selector de Fecha y Hora: Ahora vs Anterior (RF-69) */}
+                <div className="ns-datetime-section">
+                  <div className="ns-datetime-header">
+                    <div className="ns-datetime-title">
+                      <Clock size={14} />
+                      <span>Fecha y Hora de Emisión (RF-69)</span>
+                    </div>
+                    <div className="ns-datetime-switch" role="group" aria-label="Modo de fecha y hora">
+                      <button
+                        type="button"
+                        className={`ns-switch-btn ${dateTimeMode === 'now' ? 'active' : ''}`}
+                        onClick={() => {
+                          setDateTimeMode('now');
+                          setErrors(prev => ({ ...prev, customDate: null, customTime: null }));
+                        }}
+                      >
+                        Ahora (Automático)
+                      </button>
+                      <button
+                        type="button"
+                        className={`ns-switch-btn ${dateTimeMode === 'custom' ? 'active' : ''}`}
+                        onClick={() => {
+                          setDateTimeMode('custom');
+                          if (!customDate) setCustomDate(getTodayString());
+                          if (!customTime) setCustomTime(getCurrentTime());
+                        }}
+                      >
+                        Anterior (Manual)
+                      </button>
+                    </div>
+                  </div>
+
+                  {dateTimeMode === 'now' ? (
+                    <div className="ns-datetime-now-hint">
+                      Se registrará con la fecha y hora actual del sistema al confirmar ({getTodayString()} • {getCurrentTime()}).
+                    </div>
+                  ) : (
+                    <div className="ns-datetime-inputs">
+                      <div className="input-group" style={{ marginBottom: 0 }}>
+                        <label>
+                          <Calendar size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                          Fecha de la Venta *
+                        </label>
+                        <input
+                          type="date"
+                          max={getTodayString()}
+                          className={`input-field ${errors.customDate ? 'error' : ''}`}
+                          value={customDate}
+                          onChange={e => {
+                            setCustomDate(e.target.value);
+                            if (errors.customDate) setErrors(prev => ({ ...prev, customDate: null }));
+                          }}
+                        />
+                        {errors.customDate && <div className="input-error">{errors.customDate}</div>}
+                      </div>
+                      <div className="input-group" style={{ marginBottom: 0 }}>
+                        <label>
+                          <Clock size={12} style={{ verticalAlign: 'middle', marginRight: 4 }} />
+                          Hora de la Venta *
+                        </label>
+                        <input
+                          type="time"
+                          className={`input-field ${errors.customTime ? 'error' : ''}`}
+                          value={customTime}
+                          onChange={e => {
+                            setCustomTime(e.target.value);
+                            if (errors.customTime) setErrors(prev => ({ ...prev, customTime: null }));
+                          }}
+                        />
+                        {errors.customTime && <div className="input-error">{errors.customTime}</div>}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
