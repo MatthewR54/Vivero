@@ -831,7 +831,7 @@ export default function NewSale() {
                   <div className="ns-datetime-header">
                     <div className="ns-datetime-title">
                       <Clock size={14} />
-                      <span>Fecha y Hora de Emisión (RF-69)</span>
+                      <span>Fecha y Hora de Emisión</span>
                     </div>
                     <div className="ns-datetime-switch" role="group" aria-label="Modo de fecha y hora">
                       <button
