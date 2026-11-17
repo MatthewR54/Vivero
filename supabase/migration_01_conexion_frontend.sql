@@ -239,3 +239,50 @@ GRANT USAGE ON SCHEMA public TO anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
 GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
+
+-- ------------------------------------------------------------
+-- 6. Tabla y RPC de Heartbeat (Keep-Alive contra pausa de Supabase)
+-- ------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.system_heartbeat (
+    id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    ping_count BIGINT NOT NULL DEFAULT 0,
+    last_ping_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    source VARCHAR(100) DEFAULT 'keepalive'
+);
+
+ALTER TABLE public.system_heartbeat ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Permitir acceso completo a system_heartbeat" ON public.system_heartbeat;
+CREATE POLICY "Permitir acceso completo a system_heartbeat"
+    ON public.system_heartbeat FOR ALL USING (true) WITH CHECK (true);
+
+CREATE OR REPLACE FUNCTION public.keepalive_ping(p_source VARCHAR DEFAULT 'github-actions')
+RETURNS JSONB AS $$
+DECLARE
+    v_count BIGINT;
+    v_products INT;
+    v_sales INT;
+BEGIN
+    INSERT INTO public.system_heartbeat (id, ping_count, last_ping_at, source)
+    VALUES (1, 1, NOW(), p_source)
+    ON CONFLICT (id) DO UPDATE
+       SET ping_count   = public.system_heartbeat.ping_count + 1,
+           last_ping_at = NOW(),
+           source       = EXCLUDED.source
+    RETURNING ping_count INTO v_count;
+
+    SELECT COUNT(*) INTO v_products FROM public.products;
+    SELECT COUNT(*) INTO v_sales FROM public.sales;
+
+    RETURN jsonb_build_object(
+        'ok', true,
+        'ping_count', v_count,
+        'products_count', v_products,
+        'sales_count', v_sales,
+        'timestamp', NOW()
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.system_heartbeat TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.keepalive_ping(VARCHAR) TO anon, authenticated;

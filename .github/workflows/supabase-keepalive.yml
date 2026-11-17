@@ -2,9 +2,14 @@ name: Supabase Keep-Alive
 
 on:
   schedule:
-    # Se ejecuta todos los días a las 12:00 UTC (7:00 AM hora Colombia)
-    - cron: '0 12 * * *'
+    # Se ejecuta cada 6 horas (4 veces al día) para superar ampliamente el umbral
+    # de actividad diaria exigido por Supabase Free Tier.
+    - cron: '0 */6 * * *'
   workflow_dispatch: # Permite ejecutarlo manualmente desde GitHub
+
+permissions:
+  contents: write
+  actions: write
 
 jobs:
   ping-supabase:
@@ -13,29 +18,85 @@ jobs:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.VITE_SUPABASE_URL || vars.SUPABASE_URL || vars.VITE_SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY }}
     steps:
-      - name: Ping Supabase REST API
+      - name: Checkout repository (para prevención de inactividad de 60 días en GitHub)
+        uses: actions/checkout@v4
+
+      - name: Ejecutar actividad de Lectura + Escritura en Supabase
         run: |
           if [ -z "$SUPABASE_URL" ] || [ -z "$SUPABASE_ANON_KEY" ]; then
             echo "::error::Faltan SUPABASE_URL / SUPABASE_ANON_KEY en GitHub Actions Secrets."
             exit 1
           fi
 
-          # Limpiar posibles espacios/saltos de línea al pegar secretos y barra final en la URL
           URL=$(printf '%s' "$SUPABASE_URL" | tr -d '[:space:]' | sed 's:/*$::')
           KEY=$(printf '%s' "$SUPABASE_ANON_KEY" | tr -d '[:space:]')
-
           RESPONSE_FILE=$(mktemp)
-          HTTP_CODE=$(curl -sS -o "$RESPONSE_FILE" -w "%{http_code}" -X GET "$URL/rest/v1/categories?select=id&limit=1" \
-            -H "apikey: $KEY" \
-            -H "Authorization: Bearer $KEY")
 
-          echo "HTTP status: $HTTP_CODE"
+          echo "=== 1. Intentando RPC transaccional keepalive_ping (Lectura + Escritura WAL) ==="
+          RPC_CODE=$(curl -sS -o "$RESPONSE_FILE" -w "%{http_code}" -X POST "$URL/rest/v1/rpc/keepalive_ping" \
+            -H "apikey: $KEY" \
+            -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"p_source": "github-actions"}')
+
+          echo "RPC HTTP status: $RPC_CODE"
           cat "$RESPONSE_FILE"
           echo ""
 
-          if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
-            echo "::error::El ping a Supabase falló (HTTP $HTTP_CODE). Si el cuerpo dice 'permission denied for table categories' (42501), falta ejecutar supabase/migration_01_conexion_frontend.sql en el SQL Editor de Supabase para otorgar permisos (GRANT) al rol anon."
-            exit 1
+          if [ "$RPC_CODE" -lt 200 ] || [ "$RPC_CODE" -ge 300 ]; then
+            echo "RPC keepalive_ping aún no creada en base de datos; ejecutando Fallback de Escritura + Borrado (INSERT + DELETE) en categories..."
+            WRITE_CODE=$(curl -sS -o "$RESPONSE_FILE" -w "%{http_code}" -X POST "$URL/rest/v1/categories" \
+              -H "apikey: $KEY" \
+              -H "Authorization: Bearer $KEY" \
+              -H "Content-Type: application/json" \
+              -H "Prefer: return=representation" \
+              -d '{"name": "__keepalive_heartbeat__", "description": "Heartbeat temporal de actividad"}')
+            echo "Fallback INSERT HTTP status: $WRITE_CODE"
+
+            DEL_CODE=$(curl -sS -o "$RESPONSE_FILE" -w "%{http_code}" -X DELETE "$URL/rest/v1/categories?name=eq.__keepalive_heartbeat__" \
+              -H "apikey: $KEY" \
+              -H "Authorization: Bearer $KEY")
+            echo "Fallback DELETE HTTP status: $DEL_CODE"
           fi
 
-          echo "Supabase pinged successfully. Project will not be paused!"
+          echo "=== 2. Ejecutando ráfaga de consultas SELECT en tablas principales ==="
+          for ENDPOINT in \
+            "categories?select=id,name&limit=5" \
+            "products?select=id,sku,current_stock&limit=5" \
+            "accounts?select=id,name,current_balance&limit=5" \
+            "sales?select=id,sale_date,total&order=created_at.desc&limit=5" \
+            "suppliers?select=id,name&limit=5"
+          do
+            HTTP_CODE=$(curl -sS -o "$RESPONSE_FILE" -w "%{http_code}" -X GET "$URL/rest/v1/$ENDPOINT" \
+              -H "apikey: $KEY" \
+              -H "Authorization: Bearer $KEY" \
+              -H "Cache-Control: no-cache")
+
+            echo "GET /rest/v1/$ENDPOINT -> HTTP $HTTP_CODE"
+            if [ "$HTTP_CODE" -lt 200 ] || [ "$HTTP_CODE" -ge 300 ]; then
+              cat "$RESPONSE_FILE"
+              echo ""
+              echo "::error::Fallo al consultar $ENDPOINT (HTTP $HTTP_CODE)."
+              exit 1
+            fi
+          done
+
+          echo "Actividad de lectura y escritura completada exitosamente en Supabase."
+
+      - name: Evitar desactivación automática de GitHub Actions tras 60 días sin commits
+        run: |
+          # GitHub desactiva los workflows con 'schedule' si el repositorio no recibe commits en 60 días.
+          # El día 1 y 15 de cada mes a las 00:00 UTC actualizamos un archivo de pulso para mantener vivo el cron.
+          DAY=$(date -u +%d)
+          HOUR=$(date -u +%H)
+          if { [ "$DAY" = "01" ] || [ "$DAY" = "15" ]; } && [ "$HOUR" -lt 6 ]; then
+            mkdir -p .github
+            date -u +"Último pulso automático: %Y-%m-%dT%H:%M:%SZ" > .github/.keepalive-pulse
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .github/.keepalive-pulse
+            if ! git diff --staged --quiet; then
+              git commit -m "chore(keepalive): renew github actions schedule activity [skip ci]"
+              git push
+            fi
+          fi

@@ -416,6 +416,44 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- ============================================================
+-- 12.5 TABLA Y FUNCIÓN DE HEARTBEAT (KEEP-ALIVE SUPABASE FREE TIER)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.system_heartbeat (
+    id INT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    ping_count BIGINT NOT NULL DEFAULT 0,
+    last_ping_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    source VARCHAR(100) DEFAULT 'keepalive'
+);
+
+CREATE OR REPLACE FUNCTION public.keepalive_ping(p_source VARCHAR DEFAULT 'github-actions')
+RETURNS JSONB AS $$
+DECLARE
+    v_count BIGINT;
+    v_products INT;
+    v_sales INT;
+BEGIN
+    INSERT INTO public.system_heartbeat (id, ping_count, last_ping_at, source)
+    VALUES (1, 1, NOW(), p_source)
+    ON CONFLICT (id) DO UPDATE
+       SET ping_count   = public.system_heartbeat.ping_count + 1,
+           last_ping_at = NOW(),
+           source       = EXCLUDED.source
+    RETURNING ping_count INTO v_count;
+
+    SELECT COUNT(*) INTO v_products FROM public.products;
+    SELECT COUNT(*) INTO v_sales FROM public.sales;
+
+    RETURN jsonb_build_object(
+        'ok', true,
+        'ping_count', v_count,
+        'products_count', v_products,
+        'sales_count', v_sales,
+        'timestamp', NOW()
+    );
+END;
+$$ LANGUAGE plpgsql;
+
+-- ============================================================
 -- 13. POLÍTICAS DE SEGURIDAD (ROW LEVEL SECURITY - RLS)
 -- ============================================================
 -- Habilita RLS en todas las tablas para permitir consultas
@@ -435,6 +473,7 @@ ALTER TABLE public.production_inputs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.custom_merch_orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.money_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.reconciliations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.system_heartbeat ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de lectura/escritura abiertas para usuarios autenticados y clave anon (ajustables a roles)
 DO $$
