@@ -15,6 +15,7 @@ jobs:
   ping-supabase:
     runs-on: ubuntu-latest
     env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       SUPABASE_URL: ${{ secrets.SUPABASE_URL || secrets.VITE_SUPABASE_URL || vars.SUPABASE_URL || vars.VITE_SUPABASE_URL }}
       SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY || secrets.VITE_SUPABASE_ANON_KEY || vars.SUPABASE_ANON_KEY || vars.VITE_SUPABASE_ANON_KEY }}
     steps:
@@ -86,12 +87,12 @@ jobs:
       - name: Evitar desactivación automática de GitHub Actions tras 60 días sin commits
         run: |
           # GitHub desactiva los workflows con 'schedule' si el repositorio no recibe commits en 60 días.
-          # El día 1 y 15 de cada mes a las 00:00 UTC actualizamos un archivo de pulso para mantener vivo el cron.
+          # El día 1 y 15 de cada mes actualizamos un archivo de pulso (con la fecha del día) para mantener
+          # vivo el cron, sin depender de una hora exacta por si GitHub retrasa la cola de ejecución.
           DAY=$(date -u +%d)
-          HOUR=$(date -u +%H)
-          if { [ "$DAY" = "01" ] || [ "$DAY" = "15" ]; } && [ "$HOUR" -lt 6 ]; then
+          if [ "$DAY" = "01" ] || [ "$DAY" = "15" ]; then
             mkdir -p .github
-            date -u +"Último pulso automático: %Y-%m-%dT%H:%M:%SZ" > .github/.keepalive-pulse
+            date -u +"Último pulso automático: %Y-%m-%d" > .github/.keepalive-pulse
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add .github/.keepalive-pulse
